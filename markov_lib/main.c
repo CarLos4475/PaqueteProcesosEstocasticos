@@ -47,6 +47,7 @@ static void menu_modulo2(void) {
     printf("    3. Mejoramiento de Politicas con Descuento\n");
     printf("    4. Metodo de Aproximaciones Sucesivas\n");
     printf("    5. Solucion por Programacion Lineal\n");
+    printf("    6. PRUEBA COMPLETA (ejecuta 1,2,3,5 en secuencia)\n");
     printf("    0. Volver al menu principal\n");
     printf("  Opcion: ");
 }
@@ -271,6 +272,10 @@ static void ejecutar_modulo2(ModeloMarkov *modelo) {
         }
         case 5:
             programacion_lineal(modelo);
+            break;
+        case 6:
+            printf("\n  Ejecutando PRUEBA COMPLETA de PMD...\n");
+            prueba_completa_pmd(modelo);
             break;
         case 0: break;
         default: printf("  Opcion invalida.\n");

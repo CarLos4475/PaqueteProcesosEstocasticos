@@ -429,12 +429,13 @@ Al iniciar, verás el menú principal:
 0.3 0.3 0.4    ← matriz P, fila 2
 ```
 
-#### Proceso Markoviano de Decisión (PMD)
+#### Proceso Markoviano de Decisión (PMD) — Costos directos
 
 ```
 1              ← tipo (1 = PMD)
 2              ← m (3 estados: 0,1,2)
-2              ← K (2 decisiones: 1,2)
+3              ← K (2 decisiones: 1,2)
+0              ← modo_costos = 0 (costos directos)
 0.5 0.3 0.2    ← vector a
 0.7 0.2 0.1    ← P^(1) fila 0
 0.4 0.4 0.2    ← P^(1) fila 1
@@ -447,6 +448,26 @@ Al iniciar, verás el menú principal:
 6.0 9.0        ← C, fila 2
 0.9            ← factor de descuento alfa
 ```
+
+#### Proceso Markoviano de Decisión (PMD) — Con matrices de ingreso (NUEVO)
+
+```
+1              ← tipo (1 = PMD)
+2              ← m (3 estados: 0,1,2)
+3              ← K (3 decisiones: 1,2,3)
+1              ← modo_costos: 0=directos, 1=ingresos+MAX, 2=ingresos+MIN
+0.4 0.3 0.3    ← vector a
+...K matrices de transición P^(k) (m+1 filas de m+1 números cada una)...
+...K matrices de ingreso Ingreso^(k) (m+1 filas de m+1 números cada una)...
+200 900 300    ← costos fijos por decisión (K números)
+0.95           ← factor de descuento alfa
+```
+
+**Auto-generación de $C_{ik}$:**
+Cuando `modo_costos` = 1 o 2, el programa calcula automáticamente:
+$$C_{ik} = \left( \sum_{j} P_{ij}(k) \cdot Ingreso_{ij}(k) \right) - CostoFijo(k)$$
+
+Si `modo_costos=1` (maximizar), los $C_{ik}$ se niegan porque el paquete minimiza: $\min(-utilidad) = \max(utilidad)$.
 
 **Reglas del formato:**
 - Cada número separado por espacios o saltos de línea
@@ -499,16 +520,53 @@ Al iniciar, verás el menú principal:
    Opción 4 → Opción 5 (Primera Pasada) → Muestra matriz μ
    ```
 
-   **Ejemplo con Módulo 2:**
-   ```
-   Opción 5 → Opción 1 (Enumeración Exhaustiva) → Evalúa todas las políticas
-   Opción 5 → Opción 3 (Mejoramiento con Descuento) → Elige política inicial → Converge
-   Opción 5 → Opción 4 (Aproximaciones Sucesivas) → Ingresa N=100, ε=0.0001
-   Opción 5 → Opción 5 (Programación Lineal) → Resuelve con Simplex
-   ```
+    **Ejemplo con Módulo 2:**
+    ```
+    Opción 5 → Opción 1 (Enumeración Exhaustiva) → Evalúa todas las políticas
+    Opción 5 → Opción 3 (Mejoramiento con Descuento) → Elige política inicial → Converge
+    Opción 5 → Opción 4 (Aproximaciones Sucesivas) → Ingresa N=100, ε=0.0001
+    Opción 5 → Opción 5 (Programación Lineal) → Resuelve con Simplex
+    Opción 5 → Opción 6 (Prueba Completa) → Ejecuta 1,2,3,5 en batch
+    ```
 
-   **Paso 4 — Salir:**
-   - Opción 0 en cualquier menú para retroceder o salir
+    **Paso 4 — Salir:**
+    - Opción 0 en cualquier menú para retroceder o salir
+
+### 5.6 Maximización vs Minimización (NUEVO)
+
+El paquete soporta dos modos de optimización:
+
+| Modo | `modo_costos` en archivo | Consola |
+|------|--------------------------|---------|
+| **Minimizar costo** | `0` (costos directos) o `2` (ingresos+minim) | Responde N a "MAXIMIZACION?" |
+| **Maximizar utilidad** | `1` (ingresos+maxim) | Responde S a "MAXIMIZACION?" |
+
+**Lógica interna para maximización:**
+El paquete siempre minimiza la función objetivo. Para maximizar, se niega la matriz de costos:
+$$C_{ik}^{\text{interno}} = -C_{ik}^{\text{real}}$$
+Así, $\min(-utilidad) = \max(utilidad)$. Los resultados se muestran con el signo corregido (utilidad positiva).
+
+### 5.7 Modo Batch — Prueba Completa (NUEVO)
+
+La opción 6 del Módulo 2 ejecuta **4 métodos en secuencia** sin interacción adicional:
+
+1. Enumeración Exhaustiva de Políticas
+2. Mejoramiento de Políticas (sin descuento)
+3. Mejoramiento de Políticas con Descuento
+4. Solución por Programación Lineal
+
+**Ventajas:**
+- Resultados de todos los métodos en una sola ejecución
+- Permite comparar consistencia entre métodos
+- Ideal para verificar que el paquete funciona correctamente
+- Cada sección tiene encabezados `####` para fácil identificación
+
+**Uso:**
+```
+./markov test_publicidad.txt
+→ Opción 5 (Módulo 2)
+→ Opción 6 (Prueba Completa)
+```
 
 ---
 

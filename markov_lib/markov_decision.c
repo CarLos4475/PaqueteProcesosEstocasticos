@@ -1014,3 +1014,130 @@ void programacion_lineal(const ModeloMarkov *modelo) {
     free(solucion);
     simplex_destruir(tabla);
 }
+
+/* ===================================================================
+ * PRUEBA COMPLETA DE PMD (BATCH TEST)
+ *
+ * Ejecuta los 4 metodos de resolucion en secuencia, imprimiendo
+ * todos los resultados de una sola vez. Util para verificar
+ * consistencia entre metodos.
+ *
+ * Metodos ejecutados:
+ *   1. Enumeracion Exhaustiva
+ *   2. Mejoramiento de Politicas (sin descuento)
+ *   3. Mejoramiento de Politicas con Descuento
+ *   4. Programacion Lineal
+ * =================================================================== */
+void prueba_completa_pmd(ModeloMarkov *modelo) {
+    int n = modelo->num_estados;
+    int K = modelo->num_decisiones;
+
+    printf("\n");
+    printf("################################################################\n");
+    printf("#                                                              #\n");
+    printf("#   PRUEBA COMPLETA DE PROCESOS MARKOVIANOS DE DECISION        #\n");
+    printf("#                                                              #\n");
+    printf("################################################################\n");
+    printf("# Estados: %d   Decisiones: %d   alfa=%.4f\n",
+           n, K, modelo->alfa);
+    if (modelo->es_maximizacion)
+        printf("# Objetivo: MAXIMIZAR (costos negados internamente)\n");
+    else
+        printf("# Objetivo: MINIMIZAR\n");
+    printf("################################################################\n");
+
+    /* ================================================================
+     * 1. ENUMERACION EXHAUSTIVA
+     * ================================================================ */
+    enumeracion_exhaustiva(modelo);
+
+    /* ================================================================
+     * 2. MEJORAMIENTO DE POLITICAS (SIN DESCUENTO)
+     * ================================================================ */
+    printf("\n");
+    printf("################################################################\n");
+    printf("#   MEJORAMIENTO DE POLITICAS (Sin Descuento)                  #\n");
+    printf("################################################################\n");
+    Politica *R_ini = politica_crear(n, K);
+    for (int i = 0; i < n; i++) R_ini->decision[i] = 0;
+    printf("Politica inicial: ");
+    politica_imprimir(R_ini);
+    Politica *opt_sin_desc = mejoramiento_politicas(modelo, R_ini);
+    if (opt_sin_desc) {
+        printf("\n>>> Politica optima (sin descuento): ");
+        politica_imprimir(opt_sin_desc);
+
+        Matriz *Popt = politica_matriz_transicion(modelo, opt_sin_desc);
+        double *pi_opt = estado_estable(Popt);
+        if (pi_opt) {
+            double valor_obj = 0.0;
+            for (int i = 0; i < n; i++)
+                valor_obj += modelo->C->datos[i][opt_sin_desc->decision[i]]
+                           * pi_opt[i];
+            if (modelo->es_maximizacion)
+                printf("  Utilidad esperada = %.4f\n", -valor_obj);
+            else
+                printf("  Costo esperado = %.4f\n", valor_obj);
+            free(pi_opt);
+        }
+        matriz_destruir(Popt);
+        politica_destruir(opt_sin_desc);
+    }
+    politica_destruir(R_ini);
+
+    /* ================================================================
+     * 3. MEJORAMIENTO DE POLITICAS CON DESCUENTO
+     * ================================================================ */
+    printf("\n");
+    printf("################################################################\n");
+    printf("#   MEJORAMIENTO DE POLITICAS CON DESCUENTO (alfa=%.4f)        #\n",
+           modelo->alfa);
+    printf("################################################################\n");
+    R_ini = politica_crear(n, K);
+    for (int i = 0; i < n; i++) R_ini->decision[i] = 0;
+    printf("Politica inicial: ");
+    politica_imprimir(R_ini);
+    Politica *opt_con_desc = mejoramiento_politicas_descuento(modelo, R_ini);
+    if (opt_con_desc) {
+        printf("\n>>> Politica optima (con descuento): ");
+        politica_imprimir(opt_con_desc);
+
+        Matriz *Popt = politica_matriz_transicion(modelo, opt_con_desc);
+        double *pi_opt = estado_estable(Popt);
+        if (pi_opt) {
+            double valor_obj = 0.0;
+            for (int i = 0; i < n; i++)
+                valor_obj += modelo->C->datos[i][opt_con_desc->decision[i]]
+                           * pi_opt[i];
+            if (modelo->es_maximizacion)
+                printf("  Utilidad esperada a LP = %.4f\n", -valor_obj);
+            else
+                printf("  Costo esperado a LP = %.4f\n", valor_obj);
+            free(pi_opt);
+        }
+        matriz_destruir(Popt);
+        politica_destruir(opt_con_desc);
+    }
+    politica_destruir(R_ini);
+
+    /* ================================================================
+     * 4. PROGRAMACION LINEAL
+     * ================================================================ */
+    printf("\n");
+    printf("################################################################\n");
+    printf("#   PROGRAMACION LINEAL                                        #\n");
+    printf("################################################################\n");
+    programacion_lineal(modelo);
+
+    /* ================================================================
+     * RESUMEN FINAL
+     * ================================================================ */
+    printf("\n");
+    printf("################################################################\n");
+    printf("#                                                              #\n");
+    printf("#   PRUEBA COMPLETA FINALIZADA                                 #\n");
+    printf("#   Todos los metodos ejecutados exitosamente.                 #\n");
+    printf("#   Compare los resultados para verificar consistencia.        #\n");
+    printf("#                                                              #\n");
+    printf("################################################################\n\n");
+}

@@ -32,6 +32,14 @@ typedef struct {
     Matriz  *C;                 /* matriz de costos (m+1) x K */
     double   alfa;              /* factor de descuento alfa */
     double   tasa_interes;      /* tasa de interes i (para calcular alfa) */
+
+    /* ---- Nuevo: soporte para ingresos y maximizacion ---- */
+    int      es_maximizacion;   /* 1 = maximizar utilidad, 0 = minimizar costo */
+    int      usa_ingresos;      /* 1 = C se genero desde matrices de ingreso */
+    Matriz **Ingreso;           /* arreglo de K matrices de ingreso (m+1)x(m+1) */
+    double  *costo_fijo;        /* costo fijo por decision (tamano K) */
+    char    *nombres_estados;   /* nombres opcionales de estados (arreglo de char*) */
+    char    *nombres_decisiones;/* nombres opcionales de decisiones (arreglo de char*) */
 } ModeloMarkov;
 
 /* ===================================================================
@@ -42,6 +50,11 @@ void          modelo_destruir(ModeloMarkov *modelo);
 ModeloMarkov* modelo_leer_consola(void);
 ModeloMarkov* modelo_leer_archivo(const char *nombre_archivo);
 void          modelo_imprimir(const ModeloMarkov *modelo);
+
+/* Calcula C_ik a partir de matrices de ingreso y costos fijos:
+   C_ik = sum_j P_ij(k) * Ingreso_ij(k) - costo_fijo[k]
+   Si es_maximizacion=1, los valores se niegan (min -utilidad = max utilidad) */
+void modelo_calcular_costos_ingresos(ModeloMarkov *modelo);
 
 /* ===================================================================
  * Funciones del Modulo 1: Teoria Basica de Cadenas de Markov
@@ -103,5 +116,12 @@ void aproximaciones_sucesivas(const ModeloMarkov *modelo,
 
 /* 5. Solucion por Programacion Lineal */
 void programacion_lineal(const ModeloMarkov *modelo);
+
+/* ===================================================================
+ * Prueba completa (batch test) — Ejecuta los 4 metodos de PMD
+ * de una sola vez e imprime todos los resultados.
+ * (markov_decision.c)
+ * =================================================================== */
+void prueba_completa_pmd(ModeloMarkov *modelo);
 
 #endif
