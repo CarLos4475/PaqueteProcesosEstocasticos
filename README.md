@@ -133,15 +133,15 @@ Una **política determinística** $R$ asigna a cada estado $i$ una decisión $R(
 
 **Lógica:** Alternar entre evaluar una política y mejorarla, garantizando convergencia al óptimo en un número finito de pasos.
 
-$$
-\boxed{\text{Paso 1 (Valor): } g(R_n) = C_{ik} + \sum_{j=0}^{m} P_{ij}(k) \cdot V_j(R_n) - V_i(R_n), \quad V_m(R_n) = 0}
-$$
+**Paso 1 (Valor):**
+
+$$g(R_n) = C_{ik} + \sum_{j=0}^{m} P_{ij}(k) \cdot V_j(R_n) - V_i(R_n), \quad V_m(R_n) = 0$$
 
 Se resuelve un sistema lineal de $(m+1) \times (m+1)$ para las incógnitas $[V_0, V_1, \ldots, V_{m-1}, g]$.
 
-$$
-\boxed{\text{Paso 2 (Mejora): } \argmin_k \left[ C_{ik} + \sum_{j=0}^{m} P_{ij}(k) \cdot V_j(R_n) - V_i(R_n) \right]}
-$$
+**Paso 2 (Mejora):**
+
+$$\min_k \left[ C_{ik} + \sum_{j=0}^{m} P_{ij}(k) \cdot V_j(R_n) - V_i(R_n) \right]$$
 
 **Criterio de parada:** $R_{n+1} = R_n$ (política óptima alcanzada).
 
@@ -151,15 +151,15 @@ $$
 
 **Lógica:** Misma estructura que el algoritmo 2, pero incorporando el factor de descuento $\alpha$.
 
-$$
-\boxed{\text{Paso 1 (Valor): } V_i(R_n) = C_{ik} + \alpha \cdot \sum_{j=0}^{m} P_{ij}(k) \cdot V_j(R_n)}
-$$
+**Paso 1 (Valor):**
+
+$$V_i(R_n) = C_{ik} + \alpha \cdot \sum_{j=0}^{m} P_{ij}(k) \cdot V_j(R_n)$$
 
 Sistema lineal de $(m+1) \times (m+1)$: $V_i - \alpha \sum_j P_{ij}(k) V_j = C_{ik}$.
 
-$$
-\boxed{\text{Paso 2 (Mejora): } \argmin_k \left[ C_{ik} + \alpha \cdot \sum_{j=0}^{m} P_{ij}(k) \cdot V_j(R_n) \right]}
-$$
+**Paso 2 (Mejora):**
+
+$$\min_k \left[ C_{ik} + \alpha \cdot \sum_{j=0}^{m} P_{ij}(k) \cdot V_j(R_n) \right]$$
 
 ---
 
@@ -201,7 +201,7 @@ $$Z = \sum_{i=0}^{m} \sum_{k=1}^{K} C_{ik} \cdot Y_{ik}$$
 **Transformación a política determinística:**
 $$D_{ik} = \frac{Y_{ik}}{\sum_{k=1}^{K} Y_{ik}}$$
 
-La decisión para el estado $i$ es $\argmax_k D_{ik}$.
+La decisión para el estado $i$ es $\max_k D_{ik}$.
 
 **Método de la Gran M:** La restricción de igualdad $\sum Y = 1$ se maneja con una variable artificial $a \geq 0$ y un costo penalizador $M$ (muy grande) en la función objetivo: $\min \sum C_{ik}Y_{ik} + M \cdot a$. El Simplex fuerza $a \to 0$, garantizando que $\sum Y = 1$.
 

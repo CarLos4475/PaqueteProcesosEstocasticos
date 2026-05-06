@@ -31,26 +31,26 @@ $$K = \{1, 2, 3\} \quad (K = 3)$$
 ### 1.3 Matrices de Transición $P_{ij}(k)$
 
 **Radio ($k=1$):**
-$$\small P^{(1)} = \begin{bmatrix} 0.4 & 0.5 & 0.1 \\ 0.1 & 0.7 & 0.2 \\ 0.1 & 0.2 & 0.7 \end{bmatrix}$$
+$$ P^{(1)} = \begin{bmatrix} 0.4 & 0.5 & 0.1 \\ 0.1 & 0.7 & 0.2 \\ 0.1 & 0.2 & 0.7 \end{bmatrix}$$
 
 **TV ($k=2$):**
-$$\small P^{(2)} = \begin{bmatrix} 0.7 & 0.2 & 0.1 \\ 0.3 & 0.6 & 0.1 \\ 0.1 & 0.7 & 0.2 \end{bmatrix}$$
+$$ P^{(2)} = \begin{bmatrix} 0.7 & 0.2 & 0.1 \\ 0.3 & 0.6 & 0.1 \\ 0.1 & 0.7 & 0.2 \end{bmatrix}$$
 
 **Periódico ($k=3$):**
-$$\small P^{(3)} = \begin{bmatrix} 0.2 & 0.5 & 0.3 \\ 0.0 & 0.7 & 0.3 \\ 0.0 & 0.2 & 0.8 \end{bmatrix}$$
+$$ P^{(3)} = \begin{bmatrix} 0.2 & 0.5 & 0.3 \\ 0.0 & 0.7 & 0.3 \\ 0.0 & 0.2 & 0.8 \end{bmatrix}$$
 
 > **Observación clave:** Bajo Periódico ($k=3$), los estados 1 y 2 **nunca transicionan al estado 0**. Esto hace que el estado Regular sea transitorio bajo ciertas políticas.
 
 ### 1.4 Matrices de Ingreso $Ingreso_{ij}(k)$
 
 **Radio ($k=1$):**
-$$\small Ingreso^{(1)} = \begin{bmatrix} 400 & 520 & 600 \\ 300 & 400 & 700 \\ 200 & 250 & 500 \end{bmatrix}$$
+$$ Ingreso^{(1)} = \begin{bmatrix} 400 & 520 & 600 \\ 300 & 400 & 700 \\ 200 & 250 & 500 \end{bmatrix}$$
 
 **TV ($k=2$):**
-$$\small Ingreso^{(2)} = \begin{bmatrix} 1000 & 1300 & 1600 \\ 800 & 1000 & 1700 \\ 600 & 700 & 1100 \end{bmatrix}$$
+$$ Ingreso^{(2)} = \begin{bmatrix} 1000 & 1300 & 1600 \\ 800 & 1000 & 1700 \\ 600 & 700 & 1100 \end{bmatrix}$$
 
 **Periódico ($k=3$):**
-$$\small Ingreso^{(3)} = \begin{bmatrix} 400 & 530 & 710 \\ 350 & 450 & 800 \\ 250 & 400 & 650 \end{bmatrix}$$
+$$ Ingreso^{(3)} = \begin{bmatrix} 400 & 530 & 710 \\ 350 & 450 & 800 \\ 250 & 400 & 650 \end{bmatrix}$$
 
 ---
 
@@ -160,12 +160,16 @@ $$V_i = C_{ik} + \alpha \cdot \sum_j P_{ij}(k) \cdot V_j$$
 Formulación como PL con variables $Y_{ik}$ (probabilidad estacionaria conjunta):
 
 **Minimizar:**
-$$\small Z = -280Y_{00} -220Y_{01} -258Y_{02} -250Y_{10} -110Y_{11} -255Y_{12} -220Y_{20} +130Y_{21} -300Y_{22}$$
+
+$$ Z = -280Y_{00} -220Y_{01} -258Y_{02} -250Y_{10} -110Y_{11} -255Y_{12} -220Y_{20} +130Y_{21} -300Y_{22}$$
 
 **Sujeto a:**
-$$\small \sum_i \sum_k Y_{ik} = 1$$
-$$\small \sum_k Y_{jk} - \sum_i \sum_k Y_{ik} \cdot P_{ij}(k) = 0 \quad (j = 0,1,2)$$
-$$\small Y_{ik} \geq 0$$
+
+$$ \sum_i \sum_k Y_{ik} = 1$$
+
+$$ \sum_k Y_{jk} - \sum_i \sum_k Y_{ik} \cdot P_{ij}(k) = 0 \quad (j = 0,1,2)$$
+
+$$ Y_{ik} \geq 0$$
 
 **Resuelto con Simplex (Método de la Gran M):**
 
