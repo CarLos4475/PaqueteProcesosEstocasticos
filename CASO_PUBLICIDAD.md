@@ -31,26 +31,56 @@ $$K = \{1, 2, 3\} \quad (K = 3)$$
 ### 1.3 Matrices de Transición $P_{ij}(k)$
 
 **Radio ($k=1$):**
-$$ P^{(1)} = \begin{bmatrix} 0.4 & 0.5 & 0.1 \\ 0.1 & 0.7 & 0.2 \\ 0.1 & 0.2 & 0.7 \end{bmatrix}$$
+```
+P^(1) =
+[ 0.4  0.5  0.1 ]
+[ 0.1  0.7  0.2 ]
+[ 0.1  0.2  0.7 ]
+```
 
 **TV ($k=2$):**
-$$ P^{(2)} = \begin{bmatrix} 0.7 & 0.2 & 0.1 \\ 0.3 & 0.6 & 0.1 \\ 0.1 & 0.7 & 0.2 \end{bmatrix}$$
+```
+P^(2) =
+[ 0.7  0.2  0.1 ]
+[ 0.3  0.6  0.1 ]
+[ 0.1  0.7  0.2 ]
+```
 
 **Periódico ($k=3$):**
-$$ P^{(3)} = \begin{bmatrix} 0.2 & 0.5 & 0.3 \\ 0.0 & 0.7 & 0.3 \\ 0.0 & 0.2 & 0.8 \end{bmatrix}$$
+```
+P^(3) =
+[ 0.2  0.5  0.3 ]
+[ 0.0  0.7  0.3 ]
+[ 0.0  0.2  0.8 ]
+```
 
 > **Observación clave:** Bajo Periódico ($k=3$), los estados 1 y 2 **nunca transicionan al estado 0**. Esto hace que el estado Regular sea transitorio bajo ciertas políticas.
 
 ### 1.4 Matrices de Ingreso $Ingreso_{ij}(k)$
 
 **Radio ($k=1$):**
-$$ Ingreso^{(1)} = \begin{bmatrix} 400 & 520 & 600 \\ 300 & 400 & 700 \\ 200 & 250 & 500 \end{bmatrix}$$
+```
+Ingreso^(1) =
+[ 400  520  600 ]
+[ 300  400  700 ]
+[ 200  250  500 ]
+```
 
 **TV ($k=2$):**
-$$ Ingreso^{(2)} = \begin{bmatrix} 1000 & 1300 & 1600 \\ 800 & 1000 & 1700 \\ 600 & 700 & 1100 \end{bmatrix}$$
+```
+Ingreso^(2) =
+[ 1000  1300  1600 ]
+[  800  1000  1700 ]
+[  600   700  1100 ]
+```
 
 **Periódico ($k=3$):**
-$$ Ingreso^{(3)} = \begin{bmatrix} 400 & 530 & 710 \\ 350 & 450 & 800 \\ 250 & 400 & 650 \end{bmatrix}$$
+```
+Ingreso^(3) =
+[ 400  530  710 ]
+[ 350  450  800 ]
+[ 250  400  650 ]
+```
 
 ---
 
@@ -92,7 +122,12 @@ Como el objetivo es **maximizar**, los valores se niegan ($-C_{ik}$) para que el
 
 ### Matriz $C_{ik}$ final (interna, para minimizar):
 
-$$C = \begin{bmatrix} -280 & -220 & -258 \\ -250 & -110 & -255 \\ -220 & +130 & -300 \end{bmatrix}$$
+```
+C =
+[ -280  -220  -258 ]
+[ -250  -110  -255 ]
+[ -220   130  -300 ]
+```
 
 ---
 
@@ -238,7 +273,12 @@ $$\pi = [0, \ 0.4, \ 0.6]$$
 El estado Regular tiene $\pi_0 = 0$ porque la cadena es **absorbente** hacia los estados {Bueno, Excelente} bajo esta política. Una vez que se sale de Regular, no se regresa.
 
 **Matriz de transición bajo $R^*$:**
-$$P_{R^*} = \begin{bmatrix} 0.4 & 0.5 & 0.1 \\ 0.0 & 0.7 & 0.3 \\ 0.0 & 0.2 & 0.8 \end{bmatrix}$$
+```
+P_R* =
+[ 0.4  0.5  0.1 ]
+[ 0.0  0.7  0.3 ]
+[ 0.0  0.2  0.8 ]
+```
 
 **Comportamiento a largo plazo:**
 - 40% del tiempo en estado Bueno
