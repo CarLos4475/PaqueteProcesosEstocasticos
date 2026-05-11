@@ -1,0 +1,10 @@
+# Binarios
+*.o
+*.exe
+markov_lib/markov
+markov
+
+# Archivos temporales / build artifacts
+*.obj
+*.out
+*.dSYM/

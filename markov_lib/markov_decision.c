@@ -684,11 +684,13 @@ void aproximaciones_sucesivas(const ModeloMarkov *modelo,
 typedef struct {
     int     filas;
     int     columnas;
-    double *costos;    /* funcion objetivo (costos reducidos) */
-    double *rhs;       /* lado derecho */
-    double **tabla;    /* matriz de restricciones */
-    int    *base;      /* variables basicas */
-    int    *no_base;   /* variables no basicas */
+    double *costos;            /* funcion objetivo (costos reducidos) */
+    double *costos_originales; /* copia de costos antes del ajuste M */
+    double *rhs;               /* lado derecho */
+    double **tabla;            /* matriz de restricciones */
+    int    *base;              /* variables basicas */
+    int    *no_base;           /* variables no basicas */
+    int     verbose;           /* imprime traza de iteraciones */
 } TablaSimplex;
 
 static TablaSimplex* simplex_crear(int filas, int columnas) {
@@ -696,12 +698,14 @@ static TablaSimplex* simplex_crear(int filas, int columnas) {
     t->filas    = filas;
     t->columnas = columnas;
     t->costos   = (double*)calloc((size_t)columnas, sizeof(double));
+    t->costos_originales = (double*)calloc((size_t)columnas, sizeof(double));
     t->rhs      = (double*)calloc((size_t)filas, sizeof(double));
     t->tabla    = (double**)malloc((size_t)filas * sizeof(double*));
     for (int i = 0; i < filas; i++)
         t->tabla[i] = (double*)calloc((size_t)columnas, sizeof(double));
     t->base    = (int*)malloc((size_t)filas * sizeof(int));
     t->no_base = (int*)malloc((size_t)columnas * sizeof(int));
+    t->verbose = 0;
     return t;
 }
 
@@ -710,25 +714,21 @@ static void simplex_destruir(TablaSimplex *t) {
     for (int i = 0; i < t->filas; i++) free(t->tabla[i]);
     free(t->tabla);
     free(t->costos);
+    free(t->costos_originales);
     free(t->rhs);
     free(t->base);
     free(t->no_base);
     free(t);
 }
 
-static void simplex_resolver(TablaSimplex *t, double *solucion, double z_inicial) {
+static void simplex_resolver(TablaSimplex *t, double *solucion) {
     int m = t->filas;
     int n = t->columnas;
 
-    /* Inicializar variables basicas y no basicas */
-    for (int i = 0; i < n; i++)
-        t->no_base[i] = i;
+    double z_val = 0.0;
     for (int i = 0; i < m; i++)
-        t->base[i] = n - m + i; /* ultimas m variables como basicas */
-    for (int i = 0; i < m; i++)
-        t->no_base[n - m + i] = -1;
+        z_val += t->costos_originales[t->base[i]] * t->rhs[i];
 
-    double z_val = z_inicial;
     int iter = 0;
     int max_iter_simplex = 10000;
 
@@ -791,9 +791,10 @@ static void simplex_resolver(TablaSimplex *t, double *solucion, double z_inicial
             z_val += factor_costo * t->rhs[sale];
         }
 
-        /* Imprimir estado de la iteracion */
-        printf("  Iter %3d: entra var_%d (c_red=% .6f) | sale var_%d (fila %d, razon=%.6f) | Z = %.8f\n",
-               iter, entra, min_costo, t->base[sale], sale, razon_min, z_val);
+        if (t->verbose) {
+            printf("  Iter %3d: entra var_%d (c_red=% .6f) | sale var_%d (fila %d, razon=%.6f) | Z = %.8f\n",
+                   iter, entra, min_costo, t->base[sale], sale, razon_min, z_val);
+        }
 
         /* Actualizar conjuntos basicos/no basicos */
         int var_sale = t->base[sale];
@@ -803,6 +804,9 @@ static void simplex_resolver(TablaSimplex *t, double *solucion, double z_inicial
             t->no_base[var_sale] = var_sale; /* ahora es no basica */
     }
 
+    if (iter >= max_iter_simplex)
+        printf("  Advertencia: simplex no convergio en %d iteraciones.\n", max_iter_simplex);
+
     printf("  Simplex finalizo en %d iteraciones. Z* = %.8f\n", iter, z_val);
 
     /* Extraer solucion */
@@ -811,6 +815,13 @@ static void simplex_resolver(TablaSimplex *t, double *solucion, double z_inicial
     for (int i = 0; i < m; i++)
         if (t->base[i] < n)
             solucion[t->base[i]] = t->rhs[i];
+
+    /* Verificar Z contra los costos originales */
+    double Z_check = 0.0;
+    for (int j = 0; j < n; j++)
+        Z_check += t->costos_originales[j] * solucion[j];
+    if (fabs(z_val - Z_check) > 1e-6)
+        printf("  Advertencia: divergencia en Z (acumulado=% .8f vs solucion=% .8f)\n", z_val, Z_check);
 }
 
 void programacion_lineal(const ModeloMarkov *modelo) {
@@ -937,6 +948,10 @@ void programacion_lineal(const ModeloMarkov *modelo) {
         fila++;
     }
 
+    /* Guardar costos originales antes del ajuste M */
+    for (int j = 0; j < total_columnas; j++)
+        tabla->costos_originales[j] = tabla->costos[j];
+
     /* ============================================================
      * Inicializacion del simplex: variables basicas iniciales
      * La variable artificial a es basica en fila 0 (valor = 1)
@@ -963,7 +978,8 @@ void programacion_lineal(const ModeloMarkov *modelo) {
     }
 
     double *solucion = (double*)calloc((size_t)total_columnas, sizeof(double));
-    simplex_resolver(tabla, solucion, M_GRANDE * tabla->rhs[0]);
+    tabla->verbose = 0;
+    simplex_resolver(tabla, solucion);
 
     printf("=============================================================\n");
     printf("  RESULTADO - Programacion Lineal\n");
