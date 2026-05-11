@@ -609,6 +609,13 @@ void aproximaciones_sucesivas(const ModeloMarkov *modelo,
         }
         printf("]\n");
 
+        printf("  Politica aprox: [");
+        for (int i = 0; i < n; i++) {
+            printf("%d", politica[i] + 1);
+            if (i < n - 1) printf(", ");
+        }
+        printf("]\n");
+
         /* Verificar tolerancia */
         convergio = 1;
         double max_diff = 0.0;
@@ -709,7 +716,7 @@ static void simplex_destruir(TablaSimplex *t) {
     free(t);
 }
 
-static void simplex_resolver(TablaSimplex *t, double *solucion) {
+static void simplex_resolver(TablaSimplex *t, double *solucion, double z_inicial) {
     int m = t->filas;
     int n = t->columnas;
 
@@ -721,6 +728,7 @@ static void simplex_resolver(TablaSimplex *t, double *solucion) {
     for (int i = 0; i < m; i++)
         t->no_base[n - m + i] = -1;
 
+    double z_val = z_inicial;
     int iter = 0;
     int max_iter_simplex = 10000;
 
@@ -753,7 +761,6 @@ static void simplex_resolver(TablaSimplex *t, double *solucion) {
         }
 
         if (sale < 0) {
-            /* Problema no acotado */
             printf("  Advertencia: PL no acotada.\n");
             break;
         }
@@ -776,12 +783,17 @@ static void simplex_resolver(TablaSimplex *t, double *solucion) {
             t->rhs[i] -= factor * t->rhs[sale];
         }
 
-        /* Actualizar costos reducidos */
+        /* Actualizar costos reducidos y valor de Z */
         double factor_costo = t->costos[entra];
         if (fabs(factor_costo) > 1e-15) {
             for (int j = 0; j < n; j++)
                 t->costos[j] -= factor_costo * t->tabla[sale][j];
+            z_val += factor_costo * t->rhs[sale];
         }
+
+        /* Imprimir estado de la iteracion */
+        printf("  Iter %3d: entra var_%d (c_red=% .6f) | sale var_%d (fila %d, razon=%.6f) | Z = %.8f\n",
+               iter, entra, min_costo, t->base[sale], sale, razon_min, z_val);
 
         /* Actualizar conjuntos basicos/no basicos */
         int var_sale = t->base[sale];
@@ -790,6 +802,8 @@ static void simplex_resolver(TablaSimplex *t, double *solucion) {
         if (var_sale >= 0)
             t->no_base[var_sale] = var_sale; /* ahora es no basica */
     }
+
+    printf("  Simplex finalizo en %d iteraciones. Z* = %.8f\n", iter, z_val);
 
     /* Extraer solucion */
     for (int j = 0; j < n; j++)
@@ -949,7 +963,7 @@ void programacion_lineal(const ModeloMarkov *modelo) {
     }
 
     double *solucion = (double*)calloc((size_t)total_columnas, sizeof(double));
-    simplex_resolver(tabla, solucion);
+    simplex_resolver(tabla, solucion, M_GRANDE * tabla->rhs[0]);
 
     printf("=============================================================\n");
     printf("  RESULTADO - Programacion Lineal\n");
