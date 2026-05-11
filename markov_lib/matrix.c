@@ -145,24 +145,109 @@ double vector_producto_punto(const double *a, const double *b, int n) {
 }
 
 /* ===================================================================
- * Imprimir una matriz en consola con formato.
+ * Helpers de presentacion: separadores y titulos consistentes.
  * =================================================================== */
-void matriz_imprimir(const Matriz *m, const char *titulo) {
-    if (titulo) printf("\n%s [%d x %d]:\n", titulo, m->filas, m->columnas);
-    for (int i = 0; i < m->filas; i++) {
-        for (int j = 0; j < m->columnas; j++)
-            printf("%10.6f ", m->datos[i][j]);
-        printf("\n");
-    }
+#define ANCHO_BOX 65
+
+void imprimir_separador(char c, int ancho) {
+    for (int i = 0; i < ancho; i++) putchar(c);
+    putchar('\n');
+}
+
+void imprimir_titulo_box(const char *titulo) {
+    int len = (int)strlen(titulo);
+    int ancho_int = ANCHO_BOX - 2;
+    int pad = (ancho_int - len) / 2;
+    if (pad < 1) pad = 1;
+    printf("\n+");
+    for (int i = 0; i < ancho_int; i++) putchar('=');
+    printf("+\n|");
+    for (int i = 0; i < pad; i++) putchar(' ');
+    printf("%s", titulo);
+    for (int i = pad + len; i < ancho_int; i++) putchar(' ');
+    printf("|\n+");
+    for (int i = 0; i < ancho_int; i++) putchar('=');
+    printf("+\n");
+}
+
+void imprimir_titulo_seccion(const char *titulo) {
+    printf("\n--- %s ", titulo);
+    int len = (int)strlen(titulo);
+    int rest = ANCHO_BOX - len - 5;
+    if (rest < 3) rest = 3;
+    for (int i = 0; i < rest; i++) putchar('-');
+    putchar('\n');
+}
+
+void imprimir_titulo_sub(const char *titulo) {
+    printf("\n>> %s\n", titulo);
 }
 
 /* ===================================================================
- * Imprimir un vector en consola.
+ * Imprimir una matriz en consola con bordes ASCII.
+ * El ancho de celda se ajusta segun la magnitud de los valores.
+ * =================================================================== */
+void matriz_imprimir(const Matriz *m, const char *titulo) {
+    if (titulo) printf("\n%s [%d x %d]:\n", titulo, m->filas, m->columnas);
+
+    int cols = m->columnas;
+
+    /* Detectar magnitud maxima para elegir ancho de celda */
+    double max_abs = 0.0;
+    for (int i = 0; i < m->filas; i++)
+        for (int j = 0; j < cols; j++)
+            if (fabs(m->datos[i][j]) > max_abs) max_abs = fabs(m->datos[i][j]);
+
+    /* Parte entera maxima en digitos */
+    int dig_ent = 1;
+    double tmp = max_abs;
+    while (tmp >= 10.0) { dig_ent++; tmp /= 10.0; }
+
+    /* Ancho del numero: signo(1) + entero(dig_ent) + punto(1) + 6 decimales */
+    int ancho_num = 1 + dig_ent + 1 + 6;
+    if (ancho_num < 10) ancho_num = 10;
+
+    /* Ancho interior de celda = espacio + numero + 2 espacios */
+    int ancho_celda = ancho_num + 3;
+
+    /* Linea separadora */
+    putchar('+');
+    for (int j = 0; j < cols; j++) {
+        for (int k = 0; k < ancho_celda; k++) putchar('-');
+        putchar('+');
+    }
+    putchar('\n');
+
+    /* Filas de datos */
+    for (int i = 0; i < m->filas; i++) {
+        putchar('|');
+        for (int j = 0; j < cols; j++)
+            printf(" %*.6f  |", ancho_num, m->datos[i][j]);
+        putchar('\n');
+    }
+
+    /* Linea inferior */
+    putchar('+');
+    for (int j = 0; j < cols; j++) {
+        for (int k = 0; k < ancho_celda; k++) putchar('-');
+        putchar('+');
+    }
+    putchar('\n');
+}
+
+/* ===================================================================
+ * Imprimir un vector en consola con tabla bordeada.
+ * Tabla: | indice | valor |
  * =================================================================== */
 void vector_imprimir(const double *v, int n, const char *titulo) {
     if (titulo) printf("\n%s [%d]:\n", titulo, n);
+
+    printf("+--------+------------+\n");
+    printf("| indice |   valor    |\n");
+    printf("+--------+------------+\n");
     for (int i = 0; i < n; i++)
-        printf("  [%d] = %12.8f\n", i, v[i]);
+        printf("|  %4d  | %10.6f |\n", i, v[i]);
+    printf("+--------+------------+\n");
 }
 
 /* ===================================================================

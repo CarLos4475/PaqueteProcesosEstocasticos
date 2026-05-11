@@ -12,43 +12,44 @@
  * =================================================================== */
 
 static void menu_principal(void) {
-    printf("\n");
-    printf("=============================================================\n");
-    printf("  CADENAS DE MARKOV Y PROCESOS MARKOVIANOS DE DECISION\n");
-    printf("  Paquete de Software Estocastico\n");
-    printf("=============================================================\n");
-    printf("\n");
-    printf("  MENU PRINCIPAL:\n");
-    printf("    1. Cargar modelo desde consola\n");
-    printf("    2. Cargar modelo desde archivo\n");
-    printf("    3. Mostrar modelo cargado\n");
-    printf("    4. Modulo 1: Teoria basica de Cadenas de Markov\n");
-    printf("    5. Modulo 2: Procesos Markovianos de Decision (PMD)\n");
-    printf("    0. Salir\n");
+    imprimir_titulo_box("PAQUETE ESTOCASTICO - CADENAS DE MARKOV Y PMD");
+    printf("\n  MENU PRINCIPAL\n");
+    printf("  +----+------------------------------------------------+\n");
+    printf("  | 1  | Cargar modelo desde consola                    |\n");
+    printf("  | 2  | Cargar modelo desde archivo                    |\n");
+    printf("  | 3  | Mostrar modelo cargado                         |\n");
+    printf("  | 4  | Modulo 1: Teoria basica de Cadenas de Markov   |\n");
+    printf("  | 5  | Modulo 2: Procesos Markovianos de Decision     |\n");
+    printf("  | 0  | Salir                                          |\n");
+    printf("  +----+------------------------------------------------+\n");
     printf("  Opcion: ");
 }
 
 static void menu_modulo1(void) {
-    printf("\n  MODULO 1 - TEORIA BASICA DE CADENAS DE MARKOV:\n");
-    printf("    1. Ecuaciones de Chapman-Kolmogorov (P^n)\n");
-    printf("    2. Probabilidades Incondicionales\n");
-    printf("    3. Vector de Estado Estable\n");
-    printf("    4. Tiempos de Recurrencia\n");
-    printf("    5. Tiempos de Primera Pasada\n");
-    printf("    6. Probabilidades de Absorcion\n");
-    printf("    0. Volver al menu principal\n");
+    printf("\n  MODULO 1 - TEORIA BASICA DE CADENAS DE MARKOV\n");
+    printf("  +----+------------------------------------------------+\n");
+    printf("  | 1  | Ecuaciones de Chapman-Kolmogorov (P^n)         |\n");
+    printf("  | 2  | Probabilidades Incondicionales                 |\n");
+    printf("  | 3  | Vector de Estado Estable                       |\n");
+    printf("  | 4  | Tiempos de Recurrencia                         |\n");
+    printf("  | 5  | Tiempos de Primera Pasada                      |\n");
+    printf("  | 6  | Probabilidades de Absorcion                    |\n");
+    printf("  | 0  | Volver al menu principal                       |\n");
+    printf("  +----+------------------------------------------------+\n");
     printf("  Opcion: ");
 }
 
 static void menu_modulo2(void) {
-    printf("\n  MODULO 2 - PROCESOS MARKOVIANOS DE DECISION:\n");
-    printf("    1. Enumeracion Exhaustiva de Politicas\n");
-    printf("    2. Mejoramiento de Politicas (sin descuento)\n");
-    printf("    3. Mejoramiento de Politicas con Descuento\n");
-    printf("    4. Metodo de Aproximaciones Sucesivas\n");
-    printf("    5. Solucion por Programacion Lineal\n");
-    printf("    6. PRUEBA COMPLETA (ejecuta 1,2,3,5 en secuencia)\n");
-    printf("    0. Volver al menu principal\n");
+    printf("\n  MODULO 2 - PROCESOS MARKOVIANOS DE DECISION\n");
+    printf("  +----+------------------------------------------------+\n");
+    printf("  | 1  | Enumeracion Exhaustiva de Politicas            |\n");
+    printf("  | 2  | Mejoramiento de Politicas (sin descuento)      |\n");
+    printf("  | 3  | Mejoramiento de Politicas con Descuento        |\n");
+    printf("  | 4  | Metodo de Aproximaciones Sucesivas             |\n");
+    printf("  | 5  | Solucion por Programacion Lineal               |\n");
+    printf("  | 6  | PRUEBA COMPLETA (ejecuta 1,2,3,5 en secuencia) |\n");
+    printf("  | 0  | Volver al menu principal                       |\n");
+    printf("  +----+------------------------------------------------+\n");
     printf("  Opcion: ");
 }
 

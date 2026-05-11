@@ -32,6 +32,12 @@ double  vector_producto_punto(const double *a, const double *b, int n);
 void matriz_imprimir(const Matriz *m, const char *titulo);
 void vector_imprimir(const double *v, int n, const char *titulo);
 
+/* Helpers de presentacion (formato consistente en todo el paquete) */
+void imprimir_separador(char c, int ancho);
+void imprimir_titulo_box(const char *titulo);          /* nivel 1: caja ===  */
+void imprimir_titulo_seccion(const char *titulo);      /* nivel 2: --- t ---  */
+void imprimir_titulo_sub(const char *titulo);          /* nivel 3: >> t       */
+
 /* Resolver sistema lineal Ax = b mediante eliminacion gaussiana
    con pivoteo parcial. A es n x n, b es vector de tamano n,
    x es vector resultado de tamano n (debe estar preasignado).

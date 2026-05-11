@@ -149,8 +149,14 @@ void modelo_calcular_costos_ingresos(ModeloMarkov *modelo) {
     modelo->C = matriz_crear(n, K);
     if (!modelo->C) return;
 
-    printf("\n--- Calculando matriz de costos netos C_ik ---\n");
-    printf("  Formula: C_ik = (sum_j P_ij(k) * Ingreso_ij(k)) - Costo_fijo(k)\n");
+    imprimir_titulo_seccion("Calculo de la matriz de costos netos C_ik");
+    printf("  Formula:  C_ik = ( sum_j P_ij(k) * R_ij(k) )  -  Costo_fijo(k)\n");
+    if (modelo->es_maximizacion)
+        printf("  Nota   :  valor negado (paquete minimiza)  =>  C = -costo_neto\n");
+
+    printf("\n  +-------+-----+-------------+-------------+-------------+-------------+\n");
+    printf("  |  i,k  |  k  |    E[R_ik]  |   C_fijo(k) |  Neto (i,k) |    C_ik     |\n");
+    printf("  +-------+-----+-------------+-------------+-------------+-------------+\n");
 
     for (int i = 0; i < n; i++) {
         for (int k = 0; k < K; k++) {
@@ -160,20 +166,15 @@ void modelo_calcular_costos_ingresos(ModeloMarkov *modelo) {
                                   * modelo->Ingreso[k]->datos[i][j];
             }
             double costo_neto = ingreso_esperado - modelo->costo_fijo[k];
-            printf("  Estado %d, Decision %d: E[Ingreso]=%.2f - Costo=%.2f"
-                   " = %.2f",
-                   i, k+1, ingreso_esperado, modelo->costo_fijo[k], costo_neto);
+            double c_final = modelo->es_maximizacion ? -costo_neto : costo_neto;
+            modelo->C->datos[i][k] = c_final;
 
-            if (modelo->es_maximizacion) {
-                modelo->C->datos[i][k] = -costo_neto;
-                printf(" → C=%+.2f (negado para maximizar)\n",
-                       modelo->C->datos[i][k]);
-            } else {
-                modelo->C->datos[i][k] = costo_neto;
-                printf(" → C=%.2f\n", modelo->C->datos[i][k]);
-            }
+            printf("  | (%d,%d) | %3d | %11.6f | %11.6f | %11.6f | %11.6f |\n",
+                   i, k+1, k+1, ingreso_esperado, modelo->costo_fijo[k],
+                   costo_neto, c_final);
         }
     }
+    printf("  +-------+-----+-------------+-------------+-------------+-------------+\n");
     modelo->usa_ingresos = 1;
 }
 
@@ -416,21 +417,18 @@ ModeloMarkov* modelo_leer_archivo(const char *nombre_archivo) {
  * modelo_imprimir: muestra en pantalla un resumen de los datos cargados.
  * =================================================================== */
 void modelo_imprimir(const ModeloMarkov *modelo) {
-    printf("\n=============================================================\n");
-    printf("  RESUMEN DEL MODELO\n");
-    printf("=============================================================\n");
-    printf("  Tipo: %s\n", modelo->tiene_decisiones ? "PMD" : "Cadena de Markov simple");
-    printf("  Numero de estados: %d (E = {0, 1, ..., %d})\n",
+    imprimir_titulo_box("RESUMEN DEL MODELO");
+    printf("  Tipo                : %s\n",
+           modelo->tiene_decisiones ? "PMD" : "Cadena de Markov simple");
+    printf("  Numero de estados   : %d  (E = {0, 1, ..., %d})\n",
            modelo->num_estados, modelo->num_estados - 1);
     printf("  Numero de decisiones: %d\n", modelo->num_decisiones);
 
     if (modelo->tiene_decisiones) {
-        if (modelo->es_maximizacion)
-            printf("  Objetivo: MAXIMIZAR utilidad\n");
-        else
-            printf("  Objetivo: MINIMIZAR costo\n");
+        printf("  Objetivo            : %s\n",
+               modelo->es_maximizacion ? "MAXIMIZAR utilidad" : "MINIMIZAR costo");
         if (modelo->usa_ingresos)
-            printf("  Matriz C: auto-generada desde ingresos\n");
+            printf("  Matriz C            : auto-generada desde ingresos\n");
     }
 
     vector_imprimir(modelo->prob_inicial, modelo->num_estados,
@@ -452,14 +450,19 @@ void modelo_imprimir(const ModeloMarkov *modelo) {
                          "Matriz de Ingreso^(%d)", k+1);
                 matriz_imprimir(modelo->Ingreso[k], titulo);
             }
-            printf("\n  Costos fijos por decision:\n");
+            imprimir_titulo_sub("Costos fijos por decision");
+            printf("  +----------+----------+\n");
+            printf("  | decision |   costo  |\n");
+            printf("  +----------+----------+\n");
             for (int k = 0; k < modelo->num_decisiones; k++)
-                printf("    Decision %d: %.2f\n", k+1, modelo->costo_fijo[k]);
+                printf("  |    %2d    | %8.2f |\n", k+1, modelo->costo_fijo[k]);
+            printf("  +----------+----------+\n");
         }
 
         matriz_imprimir(modelo->C, "Matriz de costos C_ik (usada en algoritmos)");
-        printf("\n  Factor de descuento alfa: %.6f\n", modelo->alfa);
-        printf("  Tasa de interes i: %.6f\n", modelo->tasa_interes);
+        printf("\n  Factor de descuento alfa : %.6f\n", modelo->alfa);
+        printf("  Tasa de interes i        : %.6f\n", modelo->tasa_interes);
     }
-    printf("=============================================================\n\n");
+    imprimir_separador('=', 65);
+    printf("\n");
 }

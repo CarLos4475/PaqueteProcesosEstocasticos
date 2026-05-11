@@ -32,12 +32,12 @@ void politica_destruir(Politica *p) {
 }
 
 void politica_imprimir(const Politica *p) {
-    printf("\n  Politica R: [");
+    printf("  Politica R = [ ");
     for (int i = 0; i < p->num_estados; i++) {
         printf("%d", p->decision[i] + 1); /* +1 para mostrar decision 1..K */
         if (i < p->num_estados - 1) printf(", ");
     }
-    printf("]  (decision para cada estado 0..%d)\n", p->num_estados - 1);
+    printf(" ]   (decision por estado 0..%d)\n", p->num_estados - 1);
 }
 
 Politica* politica_copiar(const Politica *origen) {
@@ -157,12 +157,10 @@ void enumeracion_exhaustiva(ModeloMarkov *modelo) {
     int n = modelo->num_estados;
     int K = modelo->num_decisiones;
 
-    printf("\n=============================================================\n");
-    printf("  1. ENUMERACION EXHAUSTIVA DE POLITICAS\n");
-    printf("=============================================================\n");
-    printf("  Numero de estados: %d\n", n);
-    printf("  Numero de decisiones: %d\n", K);
-    printf("  Total de politicas a evaluar: %.0f\n\n", pow((double)K, (double)n));
+    imprimir_titulo_box("1. ENUMERACION EXHAUSTIVA DE POLITICAS");
+    printf("  Numero de estados            : %d\n", n);
+    printf("  Numero de decisiones         : %d\n", K);
+    printf("  Total de politicas a evaluar : %.0f\n", pow((double)K, (double)n));
 
     /* Calcular total de politicas */
     long long total = 1;
@@ -186,7 +184,10 @@ void enumeracion_exhaustiva(ModeloMarkov *modelo) {
         }
 
         iteracion++;
-        printf("\n--- Iteracion %d / %lld ---\n", iteracion, total);
+        char etiqueta[64];
+        snprintf(etiqueta, sizeof(etiqueta),
+                 "Iteracion %d / %lld", iteracion, total);
+        imprimir_titulo_seccion(etiqueta);
         politica_imprimir(&actual);
 
         /* Construir matriz de transicion bajo esta politica */
@@ -201,12 +202,13 @@ void enumeracion_exhaustiva(ModeloMarkov *modelo) {
             continue;
         }
 
-        printf("  Estado estacionario pi: [");
-        for (int i = 0; i < n; i++) {
-            printf("%.6f", pi[i]);
-            if (i < n - 1) printf(", ");
-        }
-        printf("]\n");
+        printf("\n  Estado estacionario pi:\n");
+        printf("  +--------+------------+\n");
+        printf("  | estado |    pi_i    |\n");
+        printf("  +--------+------------+\n");
+        for (int i = 0; i < n; i++)
+            printf("  |  %4d  | %10.6f |\n", i, pi[i]);
+        printf("  +--------+------------+\n");
 
         /* Calcular costo esperado: E(C) = sum_i C_{i,k(i)} * pi(i) */
         double costo = 0.0;
@@ -215,24 +217,23 @@ void enumeracion_exhaustiva(ModeloMarkov *modelo) {
             costo += modelo->C->datos[i][k] * pi[i];
         }
 
-        printf("  Costo esperado E(C) = %.8f\n", costo);
+        printf("  Costo esperado E(C) = %.6f\n", costo);
 
         if (costo < mejor_costo) {
             mejor_costo = costo;
             memcpy(mejor_pol->decision, actual.decision,
                    (size_t)n * sizeof(int));
-            printf("  *** NUEVA MEJOR POLITICA! Costo = %.8f ***\n", mejor_costo);
+            printf("  *** NUEVA MEJOR POLITICA  ->  Costo = %.6f ***\n", mejor_costo);
         }
 
         free(pi);
     }
 
-    printf("\n=============================================================\n");
-    printf("  RESULTADO FINAL - Enumeracion Exhaustiva\n");
-    printf("=============================================================\n");
+    imprimir_titulo_box("RESULTADO FINAL - Enumeracion Exhaustiva");
     printf("  Mejor politica encontrada:\n");
     politica_imprimir(mejor_pol);
-    printf("  Costo minimo esperado: %.8f\n", mejor_costo);
+    printf("  Costo minimo esperado : %.6f\n", mejor_costo);
+    printf("  Politicas evaluadas   : %lld\n", total);
 
     free(actual.decision);
     politica_destruir(mejor_pol);
@@ -257,17 +258,17 @@ Politica* mejoramiento_politicas(const ModeloMarkov *modelo,
     int n = modelo->num_estados;
     int K = modelo->num_decisiones;
 
-    printf("\n=============================================================\n");
-    printf("  2. MEJORAMIENTO DE POLITICAS (Sin Descuento)\n");
-    printf("=============================================================\n");
+    imprimir_titulo_box("2. MEJORAMIENTO DE POLITICAS (Sin Descuento)");
 
     Politica *R_actual = politica_copiar(inicial);
     int iter = 0;
 
     while (1) {
         iter++;
-        printf("\n--- ITERACION %d ---\n", iter);
-        printf("Politica actual:");
+        char etiqueta[32];
+        snprintf(etiqueta, sizeof(etiqueta), "ITERACION %d", iter);
+        imprimir_titulo_seccion(etiqueta);
+        printf("  Politica actual:\n");
         politica_imprimir(R_actual);
 
         /* ========================================================
@@ -305,7 +306,7 @@ Politica* mejoramiento_politicas(const ModeloMarkov *modelo,
             b[i] = modelo->C->datos[i][k];
         }
 
-        printf("  Resolviendo sistema lineal de %d x %d...\n", n, n);
+        printf("  Resolviendo sistema lineal de %d x %d (determinacion del valor)...\n", n, n);
 
         if (!resolver_sistema_lineal(A, b, x)) {
             fprintf(stderr, "  Error: sistema singular en iteracion %d.\n", iter);
@@ -324,10 +325,14 @@ Politica* mejoramiento_politicas(const ModeloMarkov *modelo,
         V[n-1] = 0.0; /* V_m = 0 */
         double g = x[n-1];
 
-        printf("  Valores V_i:\n");
+        printf("\n  Valores V_i resultantes:\n");
+        printf("  +--------+--------------+\n");
+        printf("  | estado |     V_i      |\n");
+        printf("  +--------+--------------+\n");
         for (int i = 0; i < n; i++)
-            printf("    V_%d = %12.6f\n", i, V[i]);
-        printf("  Ganancia g = %12.6f\n", g);
+            printf("  |  %4d  | %12.6f |\n", i, V[i]);
+        printf("  +--------+--------------+\n");
+        printf("  Ganancia g = %.6f\n", g);
         free(x);
 
         /* ========================================================
@@ -337,50 +342,50 @@ Politica* mejoramiento_politicas(const ModeloMarkov *modelo,
          * ======================================================== */
 
         Politica *R_nueva = politica_crear(n, K);
-        printf("\n  Paso de mejoramiento:\n");
+        imprimir_titulo_sub("Paso de mejoramiento");
+        printf("  +--------+----------+--------------+--------+\n");
+        printf("  | estado | decision |     test     | marca  |\n");
+        printf("  +--------+----------+--------------+--------+\n");
 
         for (int i = 0; i < n; i++) {
+            /* Precalcular todos los valores y encontrar el minimo */
+            double *vals = (double*)malloc((size_t)K * sizeof(double));
             double mejor_valor  = INFINITY;
             int    mejor_decision = R_actual->decision[i];
-
-            /* Evaluar cada decision posible para el estado i */
             for (int k = 0; k < K; k++) {
                 double suma = 0.0;
                 for (int j = 0; j < n; j++)
                     suma += modelo->P_dec[k]->datos[i][j] * V[j];
-
-                double valor = modelo->C->datos[i][k] + suma - V[i];
-
-                printf("    Estado %d, decision %d: test = %12.6f",
-                       i, k + 1, valor);
-
-                if (valor < mejor_valor - 1e-10) {
-                    mejor_valor    = valor;
+                vals[k] = modelo->C->datos[i][k] + suma - V[i];
+                if (vals[k] < mejor_valor - 1e-10) {
+                    mejor_valor    = vals[k];
                     mejor_decision = k;
-                    printf("  <-- mejor");
                 }
-                printf("\n");
             }
-
+            /* Imprimir fila por decision con MEJOR solo en la optima */
+            for (int k = 0; k < K; k++) {
+                printf("  |  %4d  |   %3d    | %12.6f | %-6s |\n",
+                       i, k + 1, vals[k], (k == mejor_decision) ? "MEJOR" : "");
+            }
             R_nueva->decision[i] = mejor_decision;
+            free(vals);
         }
+        printf("  +--------+----------+--------------+--------+\n");
 
         /* ========================================================
          * Prueba de optimalidad
          * ======================================================== */
         if (politica_igual(R_actual, R_nueva)) {
-            printf("\n  *** POLITICA OPTIMA ENCONTRADA! (R_%d = R_%d) ***\n",
-                   iter + 1, iter);
-            printf("  Politica optima:");
+            imprimir_titulo_box("POLITICA OPTIMA ENCONTRADA");
+            printf("  Condicion: R_%d = R_%d (estabilidad)\n", iter + 1, iter);
             politica_imprimir(R_actual);
-            printf("  Ganancia g = %.8f\n", g);
+            printf("  Ganancia g = %.6f\n", g);
             free(V);
             politica_destruir(R_nueva);
             break;
         }
 
-        /* Actualizar para siguiente iteracion */
-        printf("\n  R_%d != R_%d, continuando...\n", iter + 1, iter);
+        printf("\n  R_%d != R_%d  ->  continuando...\n", iter + 1, iter);
         free(V);
         politica_destruir(R_actual);
         R_actual = R_nueva;
@@ -405,18 +410,18 @@ Politica* mejoramiento_politicas_descuento(const ModeloMarkov *modelo,
     int K = modelo->num_decisiones;
     double alfa = modelo->alfa;
 
-    printf("\n=============================================================\n");
-    printf("  3. MEJORAMIENTO DE POLITICAS CON DESCUENTO\n");
-    printf("=============================================================\n");
-    printf("  Factor de descuento alfa = %.6f\n\n", alfa);
+    imprimir_titulo_box("3. MEJORAMIENTO DE POLITICAS CON DESCUENTO");
+    printf("  Factor de descuento alfa = %.6f\n", alfa);
 
     Politica *R_actual = politica_copiar(inicial);
     int iter = 0;
 
     while (1) {
         iter++;
-        printf("\n--- ITERACION %d ---\n", iter);
-        printf("Politica actual:");
+        char etiqueta[32];
+        snprintf(etiqueta, sizeof(etiqueta), "ITERACION %d", iter);
+        imprimir_titulo_seccion(etiqueta);
+        printf("  Politica actual:\n");
         politica_imprimir(R_actual);
 
         /* ========================================================
@@ -450,9 +455,13 @@ Politica* mejoramiento_politicas_descuento(const ModeloMarkov *modelo,
         matriz_destruir(A);
         free(b);
 
-        printf("  Valores V_i:\n");
+        printf("\n  Valores V_i resultantes:\n");
+        printf("  +--------+--------------+\n");
+        printf("  | estado |     V_i      |\n");
+        printf("  +--------+--------------+\n");
         for (int i = 0; i < n; i++)
-            printf("    V_%d = %12.6f\n", i, V[i]);
+            printf("  |  %4d  | %12.6f |\n", i, V[i]);
+        printf("  +--------+--------------+\n");
 
         /* ========================================================
          * Paso 2: Mejoramiento con descuento
@@ -460,40 +469,40 @@ Politica* mejoramiento_politicas_descuento(const ModeloMarkov *modelo,
          * ======================================================== */
 
         Politica *R_nueva = politica_crear(n, K);
-        printf("\n  Paso de mejoramiento (con descuento):\n");
+        imprimir_titulo_sub("Paso de mejoramiento (con descuento)");
+        printf("  +--------+----------+--------------+--------+\n");
+        printf("  | estado | decision |    valor     | marca  |\n");
+        printf("  +--------+----------+--------------+--------+\n");
 
         for (int i = 0; i < n; i++) {
+            double *vals = (double*)malloc((size_t)K * sizeof(double));
             double mejor_valor    = INFINITY;
             int    mejor_decision = R_actual->decision[i];
-
             for (int k = 0; k < K; k++) {
                 double suma = 0.0;
                 for (int j = 0; j < n; j++)
                     suma += modelo->P_dec[k]->datos[i][j] * V[j];
-
-                double valor = modelo->C->datos[i][k] + alfa * suma;
-
-                printf("    Estado %d, decision %d: valor = %12.6f",
-                       i, k + 1, valor);
-
-                if (valor < mejor_valor - 1e-10) {
-                    mejor_valor    = valor;
+                vals[k] = modelo->C->datos[i][k] + alfa * suma;
+                if (vals[k] < mejor_valor - 1e-10) {
+                    mejor_valor    = vals[k];
                     mejor_decision = k;
-                    printf("  <-- mejor");
                 }
-                printf("\n");
             }
-
+            for (int k = 0; k < K; k++) {
+                printf("  |  %4d  |   %3d    | %12.6f | %-6s |\n",
+                       i, k + 1, vals[k], (k == mejor_decision) ? "MEJOR" : "");
+            }
             R_nueva->decision[i] = mejor_decision;
+            free(vals);
         }
+        printf("  +--------+----------+--------------+--------+\n");
 
         /* Prueba de optimalidad */
         if (politica_igual(R_actual, R_nueva)) {
-            printf("\n  *** POLITICA OPTIMA ENCONTRADA! (R_%d = R_%d) ***\n",
-                   iter + 1, iter);
-            printf("  Politica optima:");
+            imprimir_titulo_box("POLITICA OPTIMA ENCONTRADA (con descuento)");
+            printf("  Condicion: R_%d = R_%d (estabilidad)\n", iter + 1, iter);
             politica_imprimir(R_actual);
-            printf("  Valor optimo V_0 = %.8f\n", V[0]);
+            printf("  Valor optimo V_0 = %.6f\n", V[0]);
 
             /* Calcular costo esperado bajo la politica optima */
             Matriz *Popt = politica_matriz_transicion(modelo, R_actual);
@@ -502,7 +511,7 @@ Politica* mejoramiento_politicas_descuento(const ModeloMarkov *modelo,
                 double costo_opt = 0.0;
                 for (int i = 0; i < n; i++)
                     costo_opt += modelo->C->datos[i][R_actual->decision[i]] * pi_opt[i];
-                printf("  Costo esperado a largo plazo = %.8f\n", costo_opt);
+                printf("  Costo esperado a largo plazo = %.6f\n", costo_opt);
                 free(pi_opt);
             }
             matriz_destruir(Popt);
@@ -512,7 +521,7 @@ Politica* mejoramiento_politicas_descuento(const ModeloMarkov *modelo,
             break;
         }
 
-        printf("\n  R_%d != R_%d, continuando...\n", iter + 1, iter);
+        printf("\n  R_%d != R_%d  ->  continuando...\n", iter + 1, iter);
         free(V);
         politica_destruir(R_actual);
         R_actual = R_nueva;
@@ -537,22 +546,50 @@ void aproximaciones_sucesivas(const ModeloMarkov *modelo,
     int K = modelo->num_decisiones;
     double alfa = modelo->alfa;
 
-    printf("\n=============================================================\n");
-    printf("  4. METODO DE APROXIMACIONES SUCESIVAS\n");
-    printf("=============================================================\n");
-    printf("  Maximo de iteraciones N = %d\n", max_iter);
-    printf("  Tolerancia epsilon = %.10f\n", epsilon);
-    printf("  Factor de descuento alfa = %.6f\n\n", alfa);
+    imprimir_titulo_box("4. METODO DE APROXIMACIONES SUCESIVAS");
+    printf("  Maximo de iteraciones N  : %d\n", max_iter);
+    printf("  Tolerancia epsilon       : %.10f\n", epsilon);
+    printf("  Factor de descuento alfa : %.6f\n", alfa);
 
     double *V_anterior = (double*)calloc((size_t)n, sizeof(double));
     double *V_actual   = (double*)calloc((size_t)n, sizeof(double));
     int    *politica   = (int*)calloc((size_t)n, sizeof(int));
 
+    /* Cabecera de tabla de iteraciones: | iter | V_0 | V_1 | ... | delta | politica | */
+    int col_v = 12;          /* ancho columna V_i */
+    int col_iter = 6;        /* ancho columna iter */
+    int col_delta = 14;      /* ancho columna delta */
+    int col_pol = (n * 3 + 3);  /* aprox ancho politica */
+    if (col_pol < 12) col_pol = 12;
+
+    /* Funcion local: imprimir borde */
+    #define IMPR_BORDE_AS() do {                                              \
+        putchar('+');                                                          \
+        for (int _b=0; _b<col_iter; _b++) putchar('-'); putchar('+');          \
+        for (int _i=0; _i<n; _i++) {                                           \
+            for (int _b=0; _b<col_v; _b++) putchar('-'); putchar('+');         \
+        }                                                                      \
+        for (int _b=0; _b<col_delta; _b++) putchar('-'); putchar('+');         \
+        for (int _b=0; _b<col_pol; _b++) putchar('-'); putchar('+');           \
+        putchar('\n');                                                         \
+    } while(0)
+
+    imprimir_titulo_seccion("Tabla de iteraciones");
+    IMPR_BORDE_AS();
+    printf("|%*s|", col_iter, " iter ");
+    for (int i = 0; i < n; i++) {
+        char lab[16]; snprintf(lab, sizeof(lab), "  V_%d  ", i);
+        printf("%*s|", col_v, lab);
+    }
+    printf("%*s|", col_delta, "  delta_max  ");
+    printf("%*s|", col_pol, "  politica  ");
+    putchar('\n');
+    IMPR_BORDE_AS();
+
     /* ========================================================
      * Paso 1: Inicializacion, n=1.
      * V_i^1 = min_k c_{ik}
      * ======================================================== */
-    printf("--- ITERACION 1 (inicializacion) ---\n");
     for (int i = 0; i < n; i++) {
         double min_costo = INFINITY;
         for (int k = 0; k < K; k++) {
@@ -563,12 +600,22 @@ void aproximaciones_sucesivas(const ModeloMarkov *modelo,
         }
         V_anterior[i] = min_costo;
     }
-    printf("  V^1: [");
-    for (int i = 0; i < n; i++) {
-        printf("%.6f", V_anterior[i]);
-        if (i < n - 1) printf(", ");
+
+    /* Fila iter 1 */
+    printf("| %4d |", 1);
+    for (int i = 0; i < n; i++) printf(" %10.6f |", V_anterior[i]);
+    printf(" %12s |", "  (inicial) ");
+    {
+        char buf[128]; int pos = 0;
+        pos += snprintf(buf+pos, sizeof(buf)-pos, " [");
+        for (int i = 0; i < n; i++) {
+            pos += snprintf(buf+pos, sizeof(buf)-pos, "%d%s",
+                            politica[i]+1, i < n-1 ? "," : "");
+        }
+        pos += snprintf(buf+pos, sizeof(buf)-pos, "] ");
+        printf("%*s|", col_pol, buf);
     }
-    printf("]\n");
+    putchar('\n');
 
     int iter = 1;
     int convergio = 0;
@@ -601,21 +648,6 @@ void aproximaciones_sucesivas(const ModeloMarkov *modelo,
             politica[i] = mejor_k;
         }
 
-        printf("\n--- ITERACION %d ---\n", iter);
-        printf("  V^%d: [", iter);
-        for (int i = 0; i < n; i++) {
-            printf("%.6f", V_actual[i]);
-            if (i < n - 1) printf(", ");
-        }
-        printf("]\n");
-
-        printf("  Politica aprox: [");
-        for (int i = 0; i < n; i++) {
-            printf("%d", politica[i] + 1);
-            if (i < n - 1) printf(", ");
-        }
-        printf("]\n");
-
         /* Verificar tolerancia */
         convergio = 1;
         double max_diff = 0.0;
@@ -624,36 +656,53 @@ void aproximaciones_sucesivas(const ModeloMarkov *modelo,
             if (diff > max_diff) max_diff = diff;
             if (diff >= epsilon) convergio = 0;
         }
-        printf("  Diferencia maxima: %.10f\n", max_diff);
 
-        if (convergio) {
-            printf("  *** CONVERGENCIA ALCANZADA en iteracion %d ***\n", iter);
+        /* Fila iter */
+        printf("| %4d |", iter);
+        for (int i = 0; i < n; i++) printf(" %10.6f |", V_actual[i]);
+        printf(" %12.4e |", max_diff);
+        {
+            char buf[128]; int pos = 0;
+            pos += snprintf(buf+pos, sizeof(buf)-pos, " [");
+            for (int i = 0; i < n; i++) {
+                pos += snprintf(buf+pos, sizeof(buf)-pos, "%d%s",
+                                politica[i]+1, i < n-1 ? "," : "");
+            }
+            pos += snprintf(buf+pos, sizeof(buf)-pos, "] ");
+            printf("%*s|", col_pol, buf);
         }
+        putchar('\n');
 
         /* Intercambiar V */
         double *temp = V_anterior;
         V_anterior = V_actual;
         V_actual = temp;
     }
+    IMPR_BORDE_AS();
+    #undef IMPR_BORDE_AS
 
-    if (!convergio && iter >= max_iter) {
-        printf("\n  *** Se alcanzo el maximo de iteraciones (%d) ***\n", max_iter);
-    }
+    if (convergio)
+        printf("\n  *** CONVERGENCIA ALCANZADA en iteracion %d ***\n", iter);
+    if (!convergio && iter >= max_iter)
+        printf("\n  *** Se alcanzo el maximo de iteraciones (%d) sin converger ***\n", max_iter);
 
-    printf("\n=============================================================\n");
-    printf("  RESULTADO FINAL - Aproximaciones Sucesivas\n");
-    printf("=============================================================\n");
-    printf("  Iteraciones realizadas: %d\n", iter);
-    printf("  Valores V_i:\n");
+    imprimir_titulo_box("RESULTADO FINAL - Aproximaciones Sucesivas");
+    printf("  Iteraciones realizadas : %d\n", iter);
+
+    printf("\n  Valores V_i finales:\n");
+    printf("  +--------+--------------+\n");
+    printf("  | estado |     V_i      |\n");
+    printf("  +--------+--------------+\n");
     for (int i = 0; i < n; i++)
-        printf("    V_%d = %12.6f\n", i, V_anterior[i]);
-    printf("\n  Politica resultante:\n");
-    printf("  [");
+        printf("  |  %4d  | %12.6f |\n", i, V_anterior[i]);
+    printf("  +--------+--------------+\n");
+
+    printf("\n  Politica resultante:\n  R = [ ");
     for (int i = 0; i < n; i++) {
         printf("%d", politica[i] + 1);
         if (i < n - 1) printf(", ");
     }
-    printf("]\n");
+    printf(" ]\n");
 
     free(V_anterior);
     free(V_actual);
@@ -807,7 +856,7 @@ static void simplex_resolver(TablaSimplex *t, double *solucion) {
     if (iter >= max_iter_simplex)
         printf("  Advertencia: simplex no convergio en %d iteraciones.\n", max_iter_simplex);
 
-    printf("  Simplex finalizo en %d iteraciones. Z* = %.8f\n", iter, z_val);
+    printf("  Simplex finalizo en %d iteraciones. Z* (acumulado) = %.6f\n", iter, z_val);
 
     /* Extraer solucion */
     for (int j = 0; j < n; j++)
@@ -820,65 +869,61 @@ static void simplex_resolver(TablaSimplex *t, double *solucion) {
     double Z_check = 0.0;
     for (int j = 0; j < n; j++)
         Z_check += t->costos_originales[j] * solucion[j];
-    if (fabs(z_val - Z_check) > 1e-6)
-        printf("  Advertencia: divergencia en Z (acumulado=% .8f vs solucion=% .8f)\n", z_val, Z_check);
+    double tol = 1e-6 * fmax(1.0, fabs(Z_check));
+    if (fabs(z_val - Z_check) > tol)
+        printf("  Advertencia: divergencia en Z (acumulado=% .8f vs solucion=% .8f, tol=%.2e)\n",
+               z_val, Z_check, tol);
 }
 
 void programacion_lineal(const ModeloMarkov *modelo) {
     int n_est = modelo->num_estados;
     int K     = modelo->num_decisiones;
 
-    printf("\n=============================================================\n");
-    printf("  5. SOLUCION POR PROGRAMACION LINEAL\n");
-    printf("=============================================================\n");
+    imprimir_titulo_box("5. SOLUCION POR PROGRAMACION LINEAL");
 
     /* Numero de variables Y_{ik}: n_est * K */
     int num_var = n_est * K;
-
-    /* Numero de restricciones:
-       - 1 restriccion de normalizacion: sum_i sum_k Y_{ik} = 1
-       - n_est restricciones de balance: para cada j
-       Total: 1 + n_est restricciones de igualdad.
-       Pero el simplex necesita restricciones de desigualdad.
-       Convertimos cada igualdad en dos desigualdades, o usamos variables
-       de holgura. Para simplificar, convertimos en restricciones de
-       desigualdad usando la formulacion estandar.
-
-       Como las restricciones son igualdades, las reemplazamos por:
-       sum_k Y_{jk} - sum_i sum_k Y_{ik} p_{ij}(k) >= 0  y  <= 0
-       Es decir, >= 0 y -(...) >= 0.
-    */
-
     int num_rest = 1 + 2 * n_est; /* dos desigualdades por cada balance */
 
-    printf("\n  Formulacion del problema lineal:\n");
-    printf("  Variables: Y_{ik} para i=0..%d, k=1..%d  (total: %d)\n",
+    imprimir_titulo_seccion("Formulacion del problema lineal");
+    printf("  Variables    : Y_{ik} para i=0..%d, k=1..%d  (total: %d)\n",
            n_est - 1, K, num_var);
-    printf("  Restricciones: %d\n\n", num_rest);
+    printf("  Restricciones: %d  (1 normalizacion + 2*%d balances)\n",
+           num_rest, n_est);
 
-    /* Imprimir funcion objetivo */
-    printf("  Funcion Objetivo (Minimizar):\n");
-    printf("  Z = ");
-    int primero = 1;
+    /* Funcion objetivo: agrupada por estado, multi-linea.
+       Formato: cada termino con su signo. Continuacion de linea indentada. */
+    imprimir_titulo_sub("Funcion Objetivo (Minimizar)");
+    int termino_global = 0;
     for (int i = 0; i < n_est; i++) {
+        printf("    %s ", i == 0 ? "Z =" : "    ");
         for (int k = 0; k < K; k++) {
-            if (!primero) printf(" + ");
-            printf("%.4f * Y_%d,%d",
-                   modelo->C->datos[i][k], i, k + 1);
-            primero = 0;
+            double c = modelo->C->datos[i][k];
+            if (termino_global == 0)
+                printf(" %.4f*Y_%d,%d", c, i, k + 1);      /* primer termino sin '+' */
+            else
+                printf(" %+.4f*Y_%d,%d", c, i, k + 1);     /* siguientes con signo */
+            if (k < K - 1) printf(" ");
+            termino_global++;
         }
+        printf("\n");
     }
-    printf("\n\n");
 
-    /* Imprimir restricciones */
-    printf("  Restricciones:\n");
-    printf("  (1) sum_i sum_k Y_{ik} = 1\n");
+    /* Restricciones - tabla compacta */
+    imprimir_titulo_sub("Restricciones");
+    printf("    +----+----------------------------------------------------------+\n");
+    printf("    | #  | expresion                                                |\n");
+    printf("    +----+----------------------------------------------------------+\n");
+    printf("    | %2d | sum_i sum_k Y_{ik} = 1  (normalizacion)                  |\n", 1);
     for (int j = 0; j < n_est; j++) {
-        printf("  (%d) sum_k Y_%d,k - sum_i sum_k Y_{ik} * P_i,%d(k) = 0\n",
-               j + 2, j, j);
+        char expr[64];
+        snprintf(expr, sizeof(expr),
+                 "sum_k Y_{%d,k} - sum_i_k Y_{ik}*P_{i,%d}(k) = 0", j, j);
+        printf("    | %2d | %-56s |\n", j + 2, expr);
     }
+    printf("    +----+----------------------------------------------------------+\n");
 
-    printf("\n  Resolviendo con metodo Simplex (Big M)...\n\n");
+    imprimir_titulo_seccion("Resolviendo con metodo Simplex (Big M)");
 
     /* ---------------------------------------------------------------
      * Construccion de la tabla simplex con metodo de la Gran M.
@@ -981,63 +1026,78 @@ void programacion_lineal(const ModeloMarkov *modelo) {
     tabla->verbose = 0;
     simplex_resolver(tabla, solucion);
 
-    printf("=============================================================\n");
-    printf("  RESULTADO - Programacion Lineal\n");
-    printf("=============================================================\n");
+    imprimir_titulo_box("RESULTADO - Programacion Lineal");
 
+    /* Tabla variables Y_{ik} activas */
     double valor_optimo = 0.0;
-    printf("\n  Variables Y_{ik} optimas:\n");
+    imprimir_titulo_sub("Variables Y_{ik} optimas (no nulas)");
+    printf("  +-----+-----+--------------+\n");
+    printf("  |  i  |  k  |    Y_{ik}    |\n");
+    printf("  +-----+-----+--------------+\n");
     for (int i = 0; i < n_est; i++) {
         for (int k = 0; k < K; k++) {
             double val = solucion[IDX(i, k)];
             if (fabs(val) > 1e-8) {
-                printf("    Y_%d,%d = %.8f\n", i, k + 1, val);
+                printf("  | %3d | %3d | %12.6f |\n", i, k + 1, val);
                 valor_optimo += modelo->C->datos[i][k] * val;
             }
         }
     }
+    printf("  +-----+-----+--------------+\n");
+    printf("\n  Valor optimo  Z = %.6f\n", valor_optimo);
 
-    printf("\n  Valor optimo Z = %.8f\n", valor_optimo);
-
-    /* Transformar a politica deterministica:
-       D_{ik} = Y_{ik} / sum_k Y_{ik}
-       decision[i] = argmax_k D_{ik} */
-    printf("\n  Politica deterministica resultante:\n");
-    printf("  [");
+    /* Politica deterministica: argmax_k Y_{ik} */
+    int *politica_det = (int*)calloc((size_t)n_est, sizeof(int));
     for (int i = 0; i < n_est; i++) {
         double suma_fila = 0.0;
-        for (int k = 0; k < K; k++)
-            suma_fila += solucion[IDX(i, k)];
-
+        for (int k = 0; k < K; k++) suma_fila += solucion[IDX(i, k)];
         int mejor_k = 0;
         double mejor_valor = -1.0;
         for (int k = 0; k < K; k++) {
             double dik = (suma_fila > 1e-12) ?
                 solucion[IDX(i, k)] / suma_fila : 0.0;
-            if (dik > mejor_valor) {
-                mejor_valor = dik;
-                mejor_k = k;
-            }
+            if (dik > mejor_valor) { mejor_valor = dik; mejor_k = k; }
         }
+        politica_det[i] = mejor_k;
+    }
 
-        printf("%d", mejor_k + 1);
+    imprimir_titulo_sub("Politica deterministica resultante");
+    printf("  R = [ ");
+    for (int i = 0; i < n_est; i++) {
+        printf("%d", politica_det[i] + 1);
         if (i < n_est - 1) printf(", ");
     }
-    printf("]\n");
+    printf(" ]\n");
 
-    printf("\n  Probabilidades D_{ik}:\n");
+    /* Tabla probabilidades D_{ik} */
+    imprimir_titulo_sub("Probabilidades D_{ik}  (Y_{ik} / sum_k Y_{ik})");
+    printf("  +--------+");
+    for (int k = 0; k < K; k++) printf("------------+");
+    printf("\n  | estado |");
+    for (int k = 0; k < K; k++) {
+        char lab[16]; snprintf(lab, sizeof(lab), "  D_i,%d   ", k + 1);
+        printf(" %-10s |", lab);
+    }
+    printf("\n  +--------+");
+    for (int k = 0; k < K; k++) printf("------------+");
+    printf("\n");
+
     for (int i = 0; i < n_est; i++) {
         double suma_fila = 0.0;
-        for (int k = 0; k < K; k++)
-            suma_fila += solucion[IDX(i, k)];
-        printf("    Estado %d: ", i);
+        for (int k = 0; k < K; k++) suma_fila += solucion[IDX(i, k)];
+        printf("  |  %4d  |", i);
         for (int k = 0; k < K; k++) {
             double dik = (suma_fila > 1e-12) ?
                 solucion[IDX(i, k)] / suma_fila : 0.0;
-            printf("D_%d,%d=%.4f  ", i, k + 1, dik);
+            printf("  %8.6f  |", dik);
         }
         printf("\n");
     }
+    printf("  +--------+");
+    for (int k = 0; k < K; k++) printf("------------+");
+    printf("\n");
+
+    free(politica_det);
 
     #undef IDX
 
@@ -1062,19 +1122,12 @@ void prueba_completa_pmd(ModeloMarkov *modelo) {
     int n = modelo->num_estados;
     int K = modelo->num_decisiones;
 
-    printf("\n");
-    printf("################################################################\n");
-    printf("#                                                              #\n");
-    printf("#   PRUEBA COMPLETA DE PROCESOS MARKOVIANOS DE DECISION        #\n");
-    printf("#                                                              #\n");
-    printf("################################################################\n");
-    printf("# Estados: %d   Decisiones: %d   alfa=%.4f\n",
-           n, K, modelo->alfa);
-    if (modelo->es_maximizacion)
-        printf("# Objetivo: MAXIMIZAR (costos negados internamente)\n");
-    else
-        printf("# Objetivo: MINIMIZAR\n");
-    printf("################################################################\n");
+    imprimir_titulo_box("PRUEBA COMPLETA DE PROCESOS MARKOVIANOS DE DECISION");
+    printf("  Estados    : %d\n", n);
+    printf("  Decisiones : %d\n", K);
+    printf("  alfa       : %.4f\n", modelo->alfa);
+    printf("  Objetivo   : %s\n", modelo->es_maximizacion
+        ? "MAXIMIZAR (costos negados internamente)" : "MINIMIZAR");
 
     /* ================================================================
      * 1. ENUMERACION EXHAUSTIVA
@@ -1084,13 +1137,9 @@ void prueba_completa_pmd(ModeloMarkov *modelo) {
     /* ================================================================
      * 2. MEJORAMIENTO DE POLITICAS (SIN DESCUENTO)
      * ================================================================ */
-    printf("\n");
-    printf("################################################################\n");
-    printf("#   MEJORAMIENTO DE POLITICAS (Sin Descuento)                  #\n");
-    printf("################################################################\n");
     Politica *R_ini = politica_crear(n, K);
     for (int i = 0; i < n; i++) R_ini->decision[i] = 0;
-    printf("Politica inicial: ");
+    printf("\n  Politica inicial:\n");
     politica_imprimir(R_ini);
     Politica *opt_sin_desc = mejoramiento_politicas(modelo, R_ini);
     if (opt_sin_desc) {
@@ -1118,14 +1167,9 @@ void prueba_completa_pmd(ModeloMarkov *modelo) {
     /* ================================================================
      * 3. MEJORAMIENTO DE POLITICAS CON DESCUENTO
      * ================================================================ */
-    printf("\n");
-    printf("################################################################\n");
-    printf("#   MEJORAMIENTO DE POLITICAS CON DESCUENTO (alfa=%.4f)        #\n",
-           modelo->alfa);
-    printf("################################################################\n");
     R_ini = politica_crear(n, K);
     for (int i = 0; i < n; i++) R_ini->decision[i] = 0;
-    printf("Politica inicial: ");
+    printf("\n  Politica inicial:\n");
     politica_imprimir(R_ini);
     Politica *opt_con_desc = mejoramiento_politicas_descuento(modelo, R_ini);
     if (opt_con_desc) {
@@ -1153,21 +1197,12 @@ void prueba_completa_pmd(ModeloMarkov *modelo) {
     /* ================================================================
      * 4. PROGRAMACION LINEAL
      * ================================================================ */
-    printf("\n");
-    printf("################################################################\n");
-    printf("#   PROGRAMACION LINEAL                                        #\n");
-    printf("################################################################\n");
     programacion_lineal(modelo);
 
     /* ================================================================
      * RESUMEN FINAL
      * ================================================================ */
-    printf("\n");
-    printf("################################################################\n");
-    printf("#                                                              #\n");
-    printf("#   PRUEBA COMPLETA FINALIZADA                                 #\n");
-    printf("#   Todos los metodos ejecutados exitosamente.                 #\n");
-    printf("#   Compare los resultados para verificar consistencia.        #\n");
-    printf("#                                                              #\n");
-    printf("################################################################\n\n");
+    imprimir_titulo_box("PRUEBA COMPLETA FINALIZADA");
+    printf("  Todos los metodos ejecutados.\n");
+    printf("  Compare los resultados para verificar consistencia.\n\n");
 }
