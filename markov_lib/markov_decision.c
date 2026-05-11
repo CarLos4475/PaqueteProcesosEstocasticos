@@ -781,6 +781,15 @@ static void simplex_resolver(TablaSimplex *t, double *solucion) {
     int iter = 0;
     int max_iter_simplex = 10000;
 
+    if (t->verbose) {
+        printf("\n  Traza de iteraciones del Simplex (Big M = 1e10):\n");
+        printf("  +-------+-------+----------------+-------+-------+--------------+----------------+\n");
+        printf("  | iter  | entra |     c_red      | sale  | fila  |    razon     |       Z        |\n");
+        printf("  +-------+-------+----------------+-------+-------+--------------+----------------+\n");
+        printf("  | %5d | %5s | %14s | %5s | %5s | %12s | %14.4e |\n",
+               0, "-", "-", "-", "-", "-", z_val);
+    }
+
     while (iter < max_iter_simplex) {
         iter++;
 
@@ -841,7 +850,7 @@ static void simplex_resolver(TablaSimplex *t, double *solucion) {
         }
 
         if (t->verbose) {
-            printf("  Iter %3d: entra var_%d (c_red=% .6f) | sale var_%d (fila %d, razon=%.6f) | Z = %.8f\n",
+            printf("  | %5d | %5d | %14.4e | %5d | %5d | %12.6f | %14.4e |\n",
                    iter, entra, min_costo, t->base[sale], sale, razon_min, z_val);
         }
 
@@ -853,10 +862,14 @@ static void simplex_resolver(TablaSimplex *t, double *solucion) {
             t->no_base[var_sale] = var_sale; /* ahora es no basica */
     }
 
+    if (t->verbose) {
+        printf("  +-------+-------+----------------+-------+-------+--------------+----------------+\n");
+    }
+
     if (iter >= max_iter_simplex)
         printf("  Advertencia: simplex no convergio en %d iteraciones.\n", max_iter_simplex);
 
-    printf("  Simplex finalizo en %d iteraciones. Z* (acumulado) = %.6f\n", iter, z_val);
+    printf("\n  Simplex finalizo en %d iteraciones. Z* (acumulado) = %.6f\n", iter, z_val);
 
     /* Extraer solucion */
     for (int j = 0; j < n; j++)
@@ -1023,7 +1036,7 @@ void programacion_lineal(const ModeloMarkov *modelo) {
     }
 
     double *solucion = (double*)calloc((size_t)total_columnas, sizeof(double));
-    tabla->verbose = 0;
+    tabla->verbose = 1;
     simplex_resolver(tabla, solucion);
 
     imprimir_titulo_box("RESULTADO - Programacion Lineal");
