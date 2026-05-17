@@ -10,6 +10,10 @@ Paquete de software en **C estándar (C99)** que implementa de forma exacta la t
 C:\Users\PC\Documents\PROYECTOS\Estocasticos\
 ├── MEMORY.md                    ← Este archivo
 ├── CASO_PUBLICIDAD.md           ← Caso de prueba: problema de publicidad
+├── PROBLEMA2.md                 ← Enunciado: problema del póker
+├── SOLUCION_PROBLEMA2.md        ← Solución detallada (a mano + paquete)
+├── DOCUMENTACION/
+│   └── MANUAL.md                ← Documentación exhaustiva del paquete
 └── markov_lib/                  ← Paquete principal
     ├── matrix.h / matrix.c      ← TDA Matriz + Gauss
     ├── markov.h                 ← Estructuras y prototipos
@@ -18,9 +22,9 @@ C:\Users\PC\Documents\PROYECTOS\Estocasticos\
     ├── markov_decision.c        ← Módulo 2: 5 algoritmos PMD + Simplex + batch
     ├── main.c                   ← Menú interactivo
     ├── Makefile / compilar.bat
-    ├── ejemplo_pmd.txt          ← Ejemplo PMD básico (3 est, 2 dec, costos directos)
+    ├── ejemplo_pmd.txt          ← Ejemplo PMD (3 est, 2 dec, costos directos, NUEVO formato)
     ├── test_publicidad.txt      ← Caso publicidad (3 est, 3 dec, ingresos + max)
-    └── README.md                ← Documentación completa
+    └── problema2.txt            ← Caso póker (2 est, 2 dec, costos directos, α=0.999)
 ```
 
 ## Cómo compilar
@@ -39,6 +43,7 @@ make && ./markov
 ./markov                              # Menú interactivo
 ./markov test_publicidad.txt          # Cargar problema de publicidad
 ./markov ejemplo_pmd.txt              # Cargar ejemplo PMD básico
+./markov problema2.txt                # Cargar problema del póker
 ```
 
 ## Estructura de datos principal (ACTUALIZADA)
@@ -127,6 +132,31 @@ typedef struct {
 - Aproximaciones sucesivas: verificado, converge a misma política
 - **Los 4 métodos del caso publicidad convergen a la misma política óptima [1,3,3] con utilidad $282.00**
 - Modo batch: ejecuta los 4 métodos secuencialmente sin errores
+
+## Novedades (sesión 2026-05-16)
+
+### 1. Actualización de archivos de ejemplo al nuevo formato
+- `ejemplo_pmd.txt` actualizado: se insertó `modo_costos=0` (línea 4) para compatibilidad con el código actual
+- `test_publicidad.txt` ya tenía el formato nuevo (`modo_costos=1` en línea 4)
+- Ambos archivos cargan correctamente con `modelo_leer_archivo()`
+
+### 2. Problema 2 — Póker de los sábados (PROBLEMA2.md)
+- Resuelto analíticamente y verificado con el paquete (SOLUCION_PROBLEMA2.md)
+- Problema de costo promedio sin descuento (α=0.999)
+- Estados: 0=buen humor, 1=mal humor; Decisiones: 1=ofrecer, 2=no ofrecer
+- Costos: C=[14,0; 14,75]
+- P^(1): [7/8,1/8; 7/8,1/8]; P^(2): [1/8,7/8; 1/8,7/8]
+- Política óptima: [2,1] (no ofrecer si buen humor, ofrecer si mal humor) → $7.00/semana
+- Los 4 métodos del paquete confirman el resultado manual
+- Archivo de entrada: `problema2.txt`
+
+### 3. Documentación completa (DOCUMENTACION/MANUAL.md)
+- Explicación teórica de cadenas de Markov y PMD
+- Descripción detallada de cada algoritmo con fragmentos de código
+- Formato de archivos de entrada (3 modalidades)
+- Manual de usuario paso a paso
+- Referencia rápida de API
+- 3 ejemplos resueltos
 
 ## Idioma y convenciones
 
