@@ -8,3 +8,18 @@ markov
 *.obj
 *.out
 *.dSYM/
+
+# LaTeX
+*.aux
+*.log
+*.pdf
+
+# Casos de estudio y soluciones (fuera del programa)
+CASO_PUBLICIDAD.md
+PROBLEMA2.md
+SOLUCION_*.md
+SOLUCION_*.tex
+SOLUCION_*.pdf
+
+# Archivos de prueba temporales
+input_cmds.txt
