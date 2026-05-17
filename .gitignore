@@ -21,5 +21,9 @@ SOLUCION_*.md
 SOLUCION_*.tex
 SOLUCION_*.pdf
 
+# Archivos de contexto para IA
+AGENTS.md
+MEMORY.md
+
 # Archivos de prueba temporales
 input_cmds.txt
