@@ -11,6 +11,15 @@
  * metodos implementados.
  * =================================================================== */
 
+/* Limpiar pantalla con portabilidad Windows/Linux */
+static void limpiar_pantalla(void) {
+#ifdef _WIN32
+    system("cls");
+#else
+    system("clear");
+#endif
+}
+
 static void menu_principal(void) {
     imprimir_titulo_box("PAQUETE ESTOCASTICO - CADENAS DE MARKOV Y PMD");
     printf("\n  MENU PRINCIPAL\n");
@@ -69,6 +78,7 @@ static void ejecutar_modulo1(ModeloMarkov *modelo) {
 
     int opcion;
     do {
+        limpiar_pantalla();
         menu_modulo1();
         if (scanf("%d", &opcion) != 1) opcion = -1;
         while (getchar() != '\n');
@@ -182,6 +192,7 @@ static void ejecutar_modulo2(ModeloMarkov *modelo) {
 
     int opcion;
     do {
+        limpiar_pantalla();
         menu_modulo2();
         if (scanf("%d", &opcion) != 1) opcion = -1;
         while (getchar() != '\n');
@@ -296,6 +307,7 @@ int main(int argc, char *argv[]) {
 
     int opcion;
     do {
+        limpiar_pantalla();
         if (modelo) {
             printf("\n  [Modelo cargado: %d estados, %s]\n",
                    modelo->num_estados,
@@ -325,10 +337,12 @@ int main(int argc, char *argv[]) {
             else printf("  No hay modelo cargado.\n");
             break;
         case 4:
+            limpiar_pantalla();
             if (modelo) ejecutar_modulo1(modelo);
             else printf("  No hay modelo cargado. Cargue uno primero.\n");
             break;
         case 5:
+            limpiar_pantalla();
             if (modelo) ejecutar_modulo2(modelo);
             else printf("  No hay modelo cargado. Cargue uno primero.\n");
             break;
