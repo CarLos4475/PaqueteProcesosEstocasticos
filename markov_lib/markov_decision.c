@@ -936,6 +936,39 @@ void programacion_lineal(const ModeloMarkov *modelo) {
     }
     printf("    +----+----------------------------------------------------------+\n");
 
+    /* Tabla expandida con valores numericos */
+    imprimir_titulo_sub("Restricciones Desarrolladas");
+    printf("    +----+----------------------------------------------------------+\n");
+    printf("    | #  | expresion                                                |\n");
+    printf("    +----+----------------------------------------------------------+\n");
+    {
+        /* Normalizacion */
+        printf("    | %2d | ", 1);
+        for (int i = 0; i < n_est; i++)
+            for (int k = 0; k < K; k++)
+                printf("%sY_%d,%d", (i == 0 && k == 0) ? "" : " + ", i, k + 1);
+        printf(" = 1\n");
+
+        /* Balances */
+        for (int j = 0; j < n_est; j++) {
+            printf("    | %2d | (", j + 2);
+            for (int k = 0; k < K; k++)
+                printf("%sY_%d,%d", k == 0 ? "" : " + ", j, k + 1);
+            printf(") - (");
+            for (int i = 0; i < n_est; i++) {
+                for (int k = 0; k < K; k++) {
+                    double p = modelo->P_dec[k]->datos[i][j];
+                    if (i == 0 && k == 0)
+                        printf("%.4g*Y_%d,%d", p, i, k + 1);
+                    else
+                        printf(" %+.4g*Y_%d,%d", p, i, k + 1);
+                }
+            }
+            printf(") = 0\n");
+        }
+    }
+    printf("    +----+----------------------------------------------------------+\n");
+
     imprimir_titulo_seccion("Resolviendo con metodo Simplex (Big M)");
 
     /* ---------------------------------------------------------------

@@ -27,8 +27,9 @@ static void menu_principal(void) {
     printf("  | 1  | Cargar modelo desde consola                    |\n");
     printf("  | 2  | Cargar modelo desde archivo                    |\n");
     printf("  | 3  | Mostrar modelo cargado                         |\n");
-    printf("  | 4  | Modulo 1: Teoria basica de Cadenas de Markov   |\n");
-    printf("  | 5  | Modulo 2: Procesos Markovianos de Decision     |\n");
+    printf("  | 4  | Limpiar pantalla                                |\n");
+    printf("  | 5  | Modulo 1: Teoria basica de Cadenas de Markov   |\n");
+    printf("  | 6  | Modulo 2: Procesos Markovianos de Decision     |\n");
     printf("  | 0  | Salir                                          |\n");
     printf("  +----+------------------------------------------------+\n");
     printf("  Opcion: ");
@@ -78,7 +79,6 @@ static void ejecutar_modulo1(ModeloMarkov *modelo) {
 
     int opcion;
     do {
-        limpiar_pantalla();
         menu_modulo1();
         if (scanf("%d", &opcion) != 1) opcion = -1;
         while (getchar() != '\n');
@@ -192,7 +192,6 @@ static void ejecutar_modulo2(ModeloMarkov *modelo) {
 
     int opcion;
     do {
-        limpiar_pantalla();
         menu_modulo2();
         if (scanf("%d", &opcion) != 1) opcion = -1;
         while (getchar() != '\n');
@@ -307,7 +306,6 @@ int main(int argc, char *argv[]) {
 
     int opcion;
     do {
-        limpiar_pantalla();
         if (modelo) {
             printf("\n  [Modelo cargado: %d estados, %s]\n",
                    modelo->num_estados,
@@ -338,11 +336,12 @@ int main(int argc, char *argv[]) {
             break;
         case 4:
             limpiar_pantalla();
+            break;
+        case 5:
             if (modelo) ejecutar_modulo1(modelo);
             else printf("  No hay modelo cargado. Cargue uno primero.\n");
             break;
-        case 5:
-            limpiar_pantalla();
+        case 6:
             if (modelo) ejecutar_modulo2(modelo);
             else printf("  No hay modelo cargado. Cargue uno primero.\n");
             break;
