@@ -38,12 +38,12 @@ static void menu_principal(void) {
 static void menu_modulo1(void) {
     printf("\n  MODULO 1 - TEORIA BASICA DE CADENAS DE MARKOV\n");
     printf("  +----+------------------------------------------------+\n");
-    printf("  | 1  | Ecuaciones de Chapman-Kolmogorov (P^n)         |\n");
-    printf("  | 2  | Probabilidades Incondicionales                 |\n");
-    printf("  | 3  | Vector de Estado Estable                       |\n");
-    printf("  | 4  | Tiempos de Recurrencia                         |\n");
-    printf("  | 5  | Tiempos de Primera Pasada                      |\n");
-    printf("  | 6  | Probabilidades de Absorcion                    |\n");
+    printf("  | 1  | Chapman-Kolmogorov (P^n)        input: n       |\n");
+    printf("  | 2  | Probabilidades Incondicionales  input: n       |\n");
+    printf("  | 3  | Vector de Estado Estable        input: P       |\n");
+    printf("  | 4  | Tiempos de Recurrencia          input: pi (de 3)|\n");
+    printf("  | 5  | Tiempos de Primera Pasada       input: P       |\n");
+    printf("  | 6  | Probabilidades de Absorcion     input: abs, k  |\n");
     printf("  | 0  | Volver al menu principal                       |\n");
     printf("  +----+------------------------------------------------+\n");
     printf("  Opcion: ");
@@ -70,11 +70,22 @@ static void ejecutar_modulo1(ModeloMarkov *modelo) {
         return;
     }
 
-    /* Para modulo 1, si es PMD usamos la primera matriz de decision */
+    /* Para modulo 1, si es PMD preguntamos cual matriz usar */
     Matriz *P_usar = modelo->P;
     if (modelo->tiene_decisiones) {
-        P_usar = modelo->P_dec[0];
-        printf("  Nota: Usando P^(1) como matriz de transicion.\n");
+        int idx = 0;
+        if (modelo->num_decisiones > 1) {
+            printf("  Hay %d matrices de transicion disponibles (1..%d).\n",
+                   modelo->num_decisiones, modelo->num_decisiones);
+            printf("  Cual desea usar?: ");
+            if (scanf("%d", &idx) == 1 && idx >= 1 && idx <= modelo->num_decisiones)
+                idx--;
+            else
+                idx = 0;
+            while (getchar() != '\n');
+        }
+        P_usar = modelo->P_dec[idx];
+        printf("  Usando P^(%d) como matriz de transicion.\n", idx + 1);
     }
 
     int opcion;
